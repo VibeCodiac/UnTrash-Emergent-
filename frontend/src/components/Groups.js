@@ -326,7 +326,8 @@ function GroupDetailsModal({ group, onClose, isMember }) {
     }
   };
 
-  const isAdmin = currentUserId && group.admin_ids && group.admin_ids.includes(currentUserId);
+  const isGroupAdmin = currentUserId && group.admin_ids && group.admin_ids.includes(currentUserId);
+  const canDeleteEvents = isAppAdmin || isGroupAdmin;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
