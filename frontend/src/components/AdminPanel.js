@@ -10,6 +10,7 @@ function AdminPanel({ user }) {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [trashReports, setTrashReports] = useState([]);
+  const [pendingAreas, setPendingAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
 
@@ -23,12 +24,14 @@ function AdminPanel({ user }) {
 
   const loadData = async () => {
     try {
-      const [usersRes, trashRes] = await Promise.all([
+      const [usersRes, trashRes, areasRes] = await Promise.all([
         axios.get(`${API}/admin/users?limit=100`, { withCredentials: true }),
-        axios.get(`${API}/trash/list?limit=100`, { withCredentials: true })
+        axios.get(`${API}/trash/list?limit=100`, { withCredentials: true }),
+        axios.get(`${API}/admin/areas/pending`, { withCredentials: true })
       ]);
       setUsers(usersRes.data);
       setTrashReports(trashRes.data);
+      setPendingAreas(areasRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
