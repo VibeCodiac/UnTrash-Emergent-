@@ -176,7 +176,7 @@ function Dashboard({ user }) {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
           <div className="grid md:grid-cols-3 gap-4">
             <button
@@ -202,6 +202,44 @@ function Dashboard({ user }) {
             </button>
           </div>
         </div>
+
+        {/* My Recent Medals */}
+        {user?.medals && Object.keys(user.medals).length > 0 && (
+          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl shadow-lg p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                <Award className="w-8 h-8 mr-3 text-yellow-600" />
+                My Latest Medals
+              </h2>
+              <button
+                onClick={() => navigate('/profile')}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                View All →
+              </button>
+            </div>
+            <div className="flex space-x-4 overflow-x-auto pb-2">
+              {Object.entries(user.medals).slice(-3).reverse().flatMap(([month, medalList]) =>
+                medalList.map((medal, idx) => (
+                  <div
+                    key={`${month}-${medal}-${idx}`}
+                    className="flex-shrink-0 bg-white rounded-lg p-4 shadow-md text-center min-w-[120px]"
+                  >
+                    <div className="text-4xl mb-2">
+                      {medal === 'diamond' && '💎'}
+                      {medal === 'platinum' && '⭐'}
+                      {medal === 'gold' && '🥇'}
+                      {medal === 'silver' && '🥈'}
+                      {medal === 'bronze' && '🥉'}
+                    </div>
+                    <p className="font-semibold text-gray-900 capitalize">{medal}</p>
+                    <p className="text-xs text-gray-500">{month}</p>
+                  </div>
+                ))
+              ).slice(0, 3)}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
