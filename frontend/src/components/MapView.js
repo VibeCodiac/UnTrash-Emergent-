@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
-import { MapPin, X, Upload, Loader, CheckCircle, AlertCircle } from 'lucide-react';
+import { MapPin, X, Upload, Loader, CheckCircle, AlertCircle, Layers, Trash2, Sparkles } from 'lucide-react';
 import L from 'leaflet';
+import 'leaflet.heat';
 import axios from 'axios';
 import 'leaflet/dist/leaflet.css';
 
@@ -37,15 +38,63 @@ const greenIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
+// Heat map layer component
+function HeatMapLayer({ data, show }) {
+  const map = useMap();
+  const heatLayerRef = useRef(null);
+
+  useEffect(() => {
+    if (!show) {
+      if (heatLayerRef.current) {
+        map.removeLayer(heatLayerRef.current);
+        heatLayerRef.current = null;
+      }
+      return;
+    }
+
+    // Create heat points
+    const heatPoints = data.map(point => [point.lat, point.lng, point.intensity || 0.5]);
+
+    // Remove old layer
+    if (heatLayerRef.current) {
+      map.removeLayer(heatLayerRef.current);
+    }
+
+    // Create new heat layer
+    heatLayerRef.current = L.heatLayer(heatPoints, {
+      radius: 25,
+      blur: 35,
+      maxZoom: 13,
+      max: 1.0,
+      gradient: {
+        0.0: 'green',
+        0.5: 'yellow',
+        1.0: 'red'
+      }
+    }).addTo(map);
+
+    return () => {
+      if (heatLayerRef.current) {
+        map.removeLayer(heatLayerRef.current);
+      }
+    };
+  }, [map, data, show]);
+
+  return null;
+}
+
 function MapView({ user }) {
   const navigate = useNavigate();
   const [trashReports, setTrashReports] = useState([]);
   const [cleanedAreas, setCleanedAreas] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showCleanAreaModal, setShowCleanAreaModal] = useState(false);
   const [showCollectModal, setShowCollectModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [showHeatMap, setShowHeatMap] = useState(false);
+  const [heatMapData, setHeatMapData] = useState([]);
 
   // Berlin center coordinates
   const berlinCenter = [52.520008, 13.404954];
@@ -53,6 +102,7 @@ function MapView({ user }) {
   useEffect(() => {
     loadTrashReports();
     loadCleanedAreas();
+    loadHeatMapData();
   }, []);
 
   const loadTrashReports = async () => {
@@ -77,6 +127,21 @@ function MapView({ user }) {
     }
   };
 
+  const loadHeatMapData = async () => {
+    try {
+      const response = await axios.get(`${API}/heatmap/data`, {
+        withCredentials: true
+      });
+      const combined = [
+        ...response.data.trash_points,
+        ...response.data.clean_areas
+      ];
+      setHeatMapData(combined);
+    } catch (error) {
+      console.error('Error loading heatmap data:', error);
+    }
+  };
+
   const handleReportTrash = async (data) => {
     setLoading(true);
     setMessage(null);
@@ -87,8 +152,27 @@ function MapView({ user }) {
       setMessage({ type: 'success', text: 'Trash reported successfully! +10 points' });
       setShowReportModal(false);
       loadTrashReports();
+      loadHeatMapData();
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to report trash. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCleanArea = async (data) => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      const response = await axios.post(`${API}/areas/clean`, data, {
+        withCredentials: true
+      });
+      setMessage({ type: 'success', text: `Area cleaned! +${response.data.points_awarded} points` });
+      setShowCleanAreaModal(false);
+      loadCleanedAreas();
+      loadHeatMapData();
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to mark area as cleaned.' });
     } finally {
       setLoading(false);
     }
@@ -111,6 +195,7 @@ function MapView({ user }) {
       setShowCollectModal(false);
       setSelectedReport(null);
       loadTrashReports();
+      loadHeatMapData();
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to collect trash.' });
     } finally {
@@ -121,31 +206,52 @@ function MapView({ user }) {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <div className="bg-white shadow-lg p-4 flex justify-between items-center">
+      <div className="bg-white shadow-lg p-4 flex justify-between items-center z-10">
         <div className="flex items-center space-x-2">
           <MapPin className="w-6 h-6 text-green-600" />
           <h1 className="text-xl font-bold text-gray-900">UnTrash Berlin - Map</h1>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setShowHeatMap(!showHeatMap)}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+              showHeatMap 
+                ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            data-testid="toggle-heatmap-button"
+          >
+            <Layers className="w-4 h-4" />
+            <span className="text-sm font-medium">Heat Map</span>
+          </button>
           <button
             onClick={() => setShowReportModal(true)}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-semibold"
             data-testid="open-report-modal-button"
           >
-            Report Trash
+            <Trash2 className="w-4 h-4" />
+            <span>Report Trash</span>
+          </button>
+          <button
+            onClick={() => setShowCleanAreaModal(true)}
+            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+            data-testid="open-clean-area-button"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Clean Area</span>
           </button>
           <button
             onClick={() => navigate('/')}
             className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
           >
-            Back to Dashboard
+            Dashboard
           </button>
         </div>
       </div>
 
       {/* Message Banner */}
       {message && (
-        <div className={`p-4 ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        <div className={`p-4 z-10 ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
           <div className="container mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-2">
               {message.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
@@ -170,6 +276,9 @@ function MapView({ user }) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
+
+          {/* Heat map layer */}
+          <HeatMapLayer data={heatMapData} show={showHeatMap} />
 
           {/* Trash markers */}
           {trashReports.map((report) => (
@@ -230,6 +339,15 @@ function MapView({ user }) {
         <ReportTrashModal
           onClose={() => setShowReportModal(false)}
           onSubmit={handleReportTrash}
+          loading={loading}
+        />
+      )}
+
+      {/* Clean Area Modal */}
+      {showCleanAreaModal && (
+        <CleanAreaModal
+          onClose={() => setShowCleanAreaModal(false)}
+          onSubmit={handleCleanArea}
           loading={loading}
         />
       )}
@@ -314,7 +432,7 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="report-trash-modal">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-900">Report Trash</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -328,7 +446,7 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
             <input
               type="number"
               step="any"
-              placeholder="Latitude"
+              placeholder="Latitude (e.g., 52.520008)"
               value={location.lat}
               onChange={(e) => setLocation({ ...location, lat: parseFloat(e.target.value) })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
@@ -338,7 +456,7 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
             <input
               type="number"
               step="any"
-              placeholder="Longitude"
+              placeholder="Longitude (e.g., 13.404954)"
               value={location.lng}
               onChange={(e) => setLocation({ ...location, lng: parseFloat(e.target.value) })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
@@ -353,10 +471,11 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               data-testid="report-address-input"
             />
+            <p className="text-xs text-gray-500 mt-1">💡 Tip: Right-click on the map to get coordinates</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Photo</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Photo of Trash</label>
             <input
               type="file"
               accept="image/*"
@@ -381,6 +500,169 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
                 <><Loader className="w-5 h-5 animate-spin mr-2" /> Uploading...</>
               ) : (
                 'Report Trash'
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function CleanAreaModal({ onClose, onSubmit, loading }) {
+  const [centerLocation, setCenterLocation] = useState({ lat: 52.520008, lng: 13.404954 });
+  const [areaSize, setAreaSize] = useState(500);
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadToCloudinary = async (file) => {
+    try {
+      const sigResponse = await axios.get(`${API}/cloudinary/signature?resource_type=image&folder=untrash/cleanings`, {
+        withCredentials: true
+      });
+      const { signature, timestamp, cloud_name, api_key, folder } = sigResponse.data;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', api_key);
+      formData.append('timestamp', timestamp);
+      formData.append('signature', signature);
+      formData.append('folder', folder);
+
+      const uploadResponse = await axios.post(
+        `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+        formData
+      );
+
+      return uploadResponse.data.secure_url;
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw error;
+    }
+  };
+
+  const generatePolygon = (center, size) => {
+    // Create a square polygon around center point
+    const offset = Math.sqrt(size) / 111000; // Rough conversion to degrees
+    return [
+      [center.lat + offset, center.lng - offset],
+      [center.lat + offset, center.lng + offset],
+      [center.lat - offset, center.lng + offset],
+      [center.lat - offset, center.lng - offset]
+    ];
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!image) {
+      alert('Please upload a photo of the cleaned area');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const imageUrl = await uploadToCloudinary(image);
+      await onSubmit({
+        center_location: centerLocation,
+        polygon_coords: generatePolygon(centerLocation, areaSize),
+        area_size: areaSize,
+        image_url: imageUrl
+      });
+    } catch (error) {
+      alert('Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="clean-area-modal">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-gray-900">Mark Area as Cleaned</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Center Location</label>
+            <input
+              type="number"
+              step="any"
+              placeholder="Latitude"
+              value={centerLocation.lat}
+              onChange={(e) => setCenterLocation({ ...centerLocation, lat: parseFloat(e.target.value) })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
+              required
+            />
+            <input
+              type="number"
+              step="any"
+              placeholder="Longitude"
+              value={centerLocation.lng}
+              onChange={(e) => setCenterLocation({ ...centerLocation, lng: parseFloat(e.target.value) })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Area Size: {areaSize} m² (Points: {Math.max(25, Math.floor(areaSize / 100 * 5))})
+            </label>
+            <input
+              type="range"
+              min="100"
+              max="5000"
+              step="100"
+              value={areaSize}
+              onChange={(e) => setAreaSize(parseInt(e.target.value))}
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Photo of Cleaned Area</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full"
+              required
+            />
+            {imagePreview && (
+              <img src={imagePreview} alt="Preview" className="mt-2 w-full h-48 object-cover rounded-lg" />
+            )}
+          </div>
+
+          <div className="flex space-x-3">
+            <button
+              type="submit"
+              disabled={uploading || loading}
+              className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 flex items-center justify-center"
+            >
+              {(uploading || loading) ? (
+                <><Loader className="w-5 h-5 animate-spin mr-2" /> Processing...</>
+              ) : (
+                'Mark as Cleaned'
               )}
             </button>
             <button
@@ -456,7 +738,7 @@ function CollectTrashModal({ report, onClose, onSubmit, loading }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="collect-trash-modal">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-900">Collect Trash</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
