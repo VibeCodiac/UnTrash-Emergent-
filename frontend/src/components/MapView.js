@@ -457,6 +457,10 @@ function MapView({ user }) {
           onClose={() => setShowReportModal(false)}
           onSubmit={handleReportTrash}
           loading={loading}
+          getCurrentLocation={getCurrentLocation}
+          userLocation={userLocation}
+          locationError={locationError}
+          gettingLocation={gettingLocation}
         />
       )}
 
