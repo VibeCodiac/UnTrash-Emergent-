@@ -500,6 +500,114 @@ function AdminPanel({ user }) {
           </div>
         )}
       </div>
+
+      {/* Reset Points Modal */}
+      {resetPointsModal && (
+        <ResetPointsModal
+          user={resetPointsModal}
+          onClose={() => setResetPointsModal(null)}
+          onReset={handleResetPoints}
+        />
+      )}
+    </div>
+  );
+}
+
+function ResetPointsModal({ user, onClose, onReset }) {
+  const [totalPoints, setTotalPoints] = useState(user.total_points || 0);
+  const [monthlyPoints, setMonthlyPoints] = useState(user.monthly_points || 0);
+  const [weeklyPoints, setWeeklyPoints] = useState(user.weekly_points || 0);
+  const [clearMedals, setClearMedals] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onReset(user.user_id, {
+      total_points: parseInt(totalPoints),
+      monthly_points: parseInt(monthlyPoints),
+      weekly_points: parseInt(weeklyPoints),
+      clear_medals: clearMedals
+    });
+  };
+
+  const handleResetToZero = () => {
+    setTotalPoints(0);
+    setMonthlyPoints(0);
+    setWeeklyPoints(0);
+    setClearMedals(true);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Reset Points for {user.name}</h2>
+        <p className="text-sm text-gray-600 mb-4">{user.email}</p>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Total Points</label>
+            <input
+              type="number"
+              value={totalPoints}
+              onChange={(e) => setTotalPoints(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              min="0"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Points</label>
+            <input
+              type="number"
+              value={monthlyPoints}
+              onChange={(e) => setMonthlyPoints(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              min="0"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Weekly Points</label>
+            <input
+              type="number"
+              value={weeklyPoints}
+              onChange={(e) => setWeeklyPoints(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              min="0"
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="clearMedals"
+              checked={clearMedals}
+              onChange={(e) => setClearMedals(e.target.checked)}
+              className="w-4 h-4 text-red-600"
+            />
+            <label htmlFor="clearMedals" className="text-sm text-gray-700">Clear all medals</label>
+          </div>
+          
+          <div className="flex space-x-2 pt-2">
+            <button
+              type="button"
+              onClick={handleResetToZero}
+              className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm"
+            >
+              Reset All to Zero
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
+            >
+              Save Changes
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+          >
+            Cancel
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
