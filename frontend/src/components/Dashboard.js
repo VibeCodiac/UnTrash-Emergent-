@@ -98,6 +98,14 @@ function Dashboard({ user }) {
                 <span>Profile</span>
               </button>
               <button
+                onClick={() => navigate('/settings')}
+                className="flex items-center space-x-2 text-gray-700 hover:text-green-600 transition-colors"
+                data-testid="nav-settings-button"
+              >
+                <Settings className="w-5 h-5" />
+                <span>Settings</span>
+              </button>
+              <button
                 onClick={handleLogout}
                 className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
                 data-testid="logout-button"
