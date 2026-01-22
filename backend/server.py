@@ -943,11 +943,7 @@ async def delete_trash_report(request: Request, report_id: str):
             }}
         )
     
-    # Deduct reporter points (5 points for reporting - using new reduced value)
-    if report.get("reporter_id"):
-        reporter_id = report["reporter_id"]
-        await safe_deduct_points(reporter_id, 5)
-        points_deducted.append(f"Reporter {reporter_id}: -5 points")
+    # No points deducted for reporter since reporting doesn't give points anymore
     
     # Deduct collector points if collection was verified and points were given
     if report.get("collector_id") and report.get("points_given", False):
