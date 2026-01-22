@@ -45,6 +45,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ==================== ROOT ENDPOINT ====================
+
+@api_router.get("/")
+async def root():
+    return {"message": "UnTrash Berlin API", "version": "1.0.0", "status": "running"}
+
 # ==================== MODELS ====================
 
 class User(BaseModel):
