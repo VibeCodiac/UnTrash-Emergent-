@@ -90,6 +90,10 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - [x] Group owner can delete their group
 - [x] Non-owner members can leave groups
 - [x] Owner cannot leave (must delete instead)
+- [x] Admin verification required for trash collections before points awarded
+- [x] Delete trash reports deducts points from reporter and collector
+- [x] Admin panel shows pending verifications with notification badge
+- [x] Ban/unban user functionality working
 
 ## API Endpoints
 
