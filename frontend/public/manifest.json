@@ -1,0 +1,17 @@
+{
+  "short_name": "UnTrash Berlin",
+  "name": "UnTrash Berlin - Community Cleanup",
+  "description": "Report and collect trash to clean up Berlin together",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#16a34a",
+  "background_color": "#f0fdf4",
+  "orientation": "portrait-primary"
+}
