@@ -466,20 +466,13 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
 
   const uploadToCloudinary = async (file) => {
     try {
-      const sigResponse = await axios.get(`${API}/cloudinary/signature?resource_type=image&folder=untrash/reports`, {
-        withCredentials: true
-      });
-      const { signature, timestamp, cloud_name, api_key, folder } = sigResponse.data;
-
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('api_key', api_key);
-      formData.append('timestamp', timestamp);
-      formData.append('signature', signature);
-      formData.append('folder', folder);
+      formData.append('upload_preset', 'UnTrash'); // Your unsigned upload preset
+      formData.append('folder', 'untrash/reports');
 
       const uploadResponse = await axios.post(
-        `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
+        `https://api.cloudinary.com/v1_1/dx9sbx0lc/image/upload`,
         formData
       );
 
