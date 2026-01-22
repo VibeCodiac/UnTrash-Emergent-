@@ -1,0 +1,154 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MapPin, Users, Trophy, User, LogOut } from 'lucide-react';
+
+function Dashboard({ user }) {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+    await fetch(`${BACKEND_URL}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    navigate('/login');
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
+      {/* Navigation Bar */}
+      <nav className="bg-white shadow-lg">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-2">
+              <MapPin className="w-8 h-8 text-green-600" />
+              <span className="text-2xl font-bold text-gray-900">UnTrash Berlin</span>
+            </div>
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => navigate('/map')}
+                className="flex items-center space-x-2 text-gray-700 hover:text-green-600 transition-colors"
+                data-testid="nav-map-button"
+              >
+                <MapPin className="w-5 h-5" />
+                <span>Map</span>
+              </button>
+              <button
+                onClick={() => navigate('/groups')}
+                className="flex items-center space-x-2 text-gray-700 hover:text-green-600 transition-colors"
+                data-testid="nav-groups-button"
+              >
+                <Users className="w-5 h-5" />
+                <span>Groups</span>
+              </button>
+              <button
+                onClick={() => navigate('/rankings')}
+                className="flex items-center space-x-2 text-gray-700 hover:text-green-600 transition-colors"
+                data-testid="nav-rankings-button"
+              >
+                <Trophy className="w-5 h-5" />
+                <span>Rankings</span>
+              </button>
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center space-x-2 text-gray-700 hover:text-green-600 transition-colors"
+                data-testid="nav-profile-button"
+              >
+                <User className="w-5 h-5" />
+                <span>Profile</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
+                data-testid="logout-button"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Dashboard Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Welcome Section */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <div className="flex items-center space-x-4">
+            {user?.picture && (
+              <img
+                src={user.picture}
+                alt={user.name}
+                className="w-16 h-16 rounded-full"
+              />
+            )}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.name}!</h1>
+              <p className="text-gray-600 mt-1">You've earned {user?.total_points || 0} points total</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">Total Points</h3>
+              <Trophy className="w-8 h-8 text-yellow-500" />
+            </div>
+            <p className="text-4xl font-bold text-gray-900" data-testid="total-points">{user?.total_points || 0}</p>
+            <p className="text-sm text-gray-500 mt-2">Keep collecting to earn more!</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">Monthly Points</h3>
+              <Trophy className="w-8 h-8 text-green-500" />
+            </div>
+            <p className="text-4xl font-bold text-gray-900" data-testid="monthly-points">{user?.monthly_points || 0}</p>
+            <p className="text-sm text-gray-500 mt-2">This month's progress</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">Weekly Points</h3>
+              <Trophy className="w-8 h-8 text-blue-500" />
+            </div>
+            <p className="text-4xl font-bold text-gray-900" data-testid="weekly-points">{user?.weekly_points || 0}</p>
+            <p className="text-sm text-gray-500 mt-2">This week's progress</p>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            <button
+              onClick={() => navigate('/map')}
+              className="bg-green-600 text-white px-6 py-4 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+              data-testid="report-trash-button"
+            >
+              Report Trash
+            </button>
+            <button
+              onClick={() => navigate('/map')}
+              className="bg-blue-600 text-white px-6 py-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+              data-testid="collect-trash-button"
+            >
+              Collect Trash
+            </button>
+            <button
+              onClick={() => navigate('/groups')}
+              className="bg-purple-600 text-white px-6 py-4 rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+              data-testid="join-group-button"
+            >
+              Join a Group
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Dashboard;
