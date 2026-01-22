@@ -803,6 +803,92 @@ async def get_user_by_id(user_id: str):
         raise HTTPException(status_code=404, detail="User not found")
     return user_doc
 
+# ==================== ADMIN ENDPOINTS ====================
+
+@api_router.post("/admin/users/{user_id}/ban")
+async def ban_user(request: Request, user_id: str):
+    """Ban a user (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"is_banned": True}}
+    )
+    
+    # Delete all sessions for banned user
+    await db.user_sessions.delete_many({"user_id": user_id})
+    
+    return {"message": f"User {user_id} has been banned"}
+
+@api_router.post("/admin/users/{user_id}/unban")
+async def unban_user(request: Request, user_id: str):
+    """Unban a user (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"is_banned": False}}
+    )
+    
+    return {"message": f"User {user_id} has been unbanned"}
+
+@api_router.delete("/admin/trash/{report_id}")
+async def delete_trash_report(request: Request, report_id: str):
+    """Delete a trash report (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    report = await db.trash_reports.find_one({"report_id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    await db.trash_reports.delete_one({"report_id": report_id})
+    
+    return {"message": f"Report {report_id} deleted"}
+
+@api_router.put("/admin/trash/{report_id}")
+async def update_trash_report(request: Request, report_id: str, data: dict):
+    """Update a trash report (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    report = await db.trash_reports.find_one({"report_id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    # Update allowed fields
+    update_fields = {}
+    if "status" in data:
+        update_fields["status"] = data["status"]
+    if "location" in data:
+        update_fields["location"] = data["location"]
+    if "image_url" in data:
+        update_fields["image_url"] = data["image_url"]
+    
+    if update_fields:
+        await db.trash_reports.update_one(
+            {"report_id": report_id},
+            {"$set": update_fields}
+        )
+    
+    return {"message": f"Report {report_id} updated"}
+
+@api_router.get("/admin/users")
+async def list_all_users(request: Request, limit: int = 50):
+    """List all users (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    users = await db.users.find({}, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    return users
+
 # ==================== STATS ENDPOINTS ====================
 
 @api_router.get("/stats/weekly")
