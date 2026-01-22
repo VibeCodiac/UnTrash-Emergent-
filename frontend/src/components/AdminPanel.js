@@ -401,11 +401,21 @@ function AdminPanel({ user }) {
                           {u.is_banned && <span className="text-xs bg-gray-800 text-white px-2 py-1 rounded ml-2">BANNED</span>}
                         </p>
                         <p className="text-sm text-gray-600">{u.email}</p>
-                        <p className="text-xs text-gray-500">Points: {u.total_points || 0} | Groups: {u.joined_groups?.length || 0}</p>
+                        <p className="text-xs text-gray-500">
+                          Points: {u.total_points || 0} (Monthly: {u.monthly_points || 0}, Weekly: {u.weekly_points || 0}) | Groups: {u.joined_groups?.length || 0}
+                        </p>
                       </div>
                     </div>
                     {!u.is_admin && (
                       <div className="flex space-x-2">
+                        <button
+                          onClick={() => setResetPointsModal(u)}
+                          className="flex items-center space-x-1 bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700"
+                          data-testid={`reset-points-${u.user_id}`}
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          <span>Reset Points</span>
+                        </button>
                         {u.is_banned ? (
                           <button
                             onClick={() => handleUnbanUser(u.user_id)}
