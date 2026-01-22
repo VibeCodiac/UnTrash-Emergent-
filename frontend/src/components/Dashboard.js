@@ -138,32 +138,23 @@ function Dashboard({ user }) {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-700">Total Points</h3>
               <Trophy className="w-8 h-8 text-yellow-500" />
             </div>
-            <p className="text-4xl font-bold text-gray-900" data-testid="total-points">{user?.total_points || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">Keep collecting to earn more!</p>
+            <p className="text-5xl font-bold text-gray-900" data-testid="total-points">{user?.total_points || 0}</p>
+            <p className="text-sm text-gray-500 mt-2">All-time points earned</p>
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">Monthly Points</h3>
-              <Trophy className="w-8 h-8 text-green-500" />
+              <h3 className="text-lg font-semibold text-gray-700">Total Groups</h3>
+              <Users className="w-8 h-8 text-purple-500" />
             </div>
-            <p className="text-4xl font-bold text-gray-900" data-testid="monthly-points">{user?.monthly_points || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">This month's progress</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">Weekly Points</h3>
-              <Trophy className="w-8 h-8 text-blue-500" />
-            </div>
-            <p className="text-4xl font-bold text-gray-900" data-testid="weekly-points">{user?.weekly_points || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">This week's progress</p>
+            <p className="text-5xl font-bold text-gray-900" data-testid="total-groups">{user?.joined_groups?.length || 0}</p>
+            <p className="text-sm text-gray-500 mt-2">Groups you've joined</p>
           </div>
         </div>
 
