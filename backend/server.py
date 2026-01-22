@@ -618,6 +618,28 @@ async def get_group_events(group_id: str):
     ).sort("event_date", 1).to_list(100)
     return events
 
+@api_router.delete("/groups/{group_id}/events/{event_id}")
+async def delete_group_event(request: Request, group_id: str, event_id: str):
+    """Delete a group event"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    event = await db.group_events.find_one({"event_id": event_id}, {"_id": 0})
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if user is admin or event creator
+    if user.user_id not in group.get("admin_ids", []) and user.user_id != event.get("created_by"):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this event")
+    
+    await db.group_events.delete_one({"event_id": event_id})
+    return {"message": "Event deleted successfully"}
+
 # ==================== RANKINGS ENDPOINTS ====================
 
 @api_router.get("/rankings/weekly/users")
