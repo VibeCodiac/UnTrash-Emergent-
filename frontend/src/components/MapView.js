@@ -95,6 +95,8 @@ function MapView({ user }) {
   const [message, setMessage] = useState(null);
   const [showHeatMap, setShowHeatMap] = useState(false);
   const [heatMapData, setHeatMapData] = useState([]);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [lastCollectionPoints, setLastCollectionPoints] = useState(0);
 
   // Berlin center coordinates
   const berlinCenter = [52.520008, 13.404954];
