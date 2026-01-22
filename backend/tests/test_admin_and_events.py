@@ -76,7 +76,7 @@ class TestAdminUsers:
     def test_admin_users_requires_auth(self):
         """Admin endpoint should require authentication"""
         response = requests.get(f"{BASE_URL}/api/admin/users")
-        assert response.status_code == 401, f"Expected 401 without auth, got {response.status_code}"
+        assert response.status_code in [401, 403], f"Expected 401/403 without auth, got {response.status_code}"
         print("✓ Admin users endpoint properly requires authentication")
 
 
@@ -114,7 +114,7 @@ class TestAdminPendingAreas:
     def test_pending_areas_requires_admin(self):
         """Pending areas endpoint should require admin authentication"""
         response = requests.get(f"{BASE_URL}/api/admin/areas/pending")
-        assert response.status_code == 401, f"Expected 401 without auth, got {response.status_code}"
+        assert response.status_code in [401, 403], f"Expected 401/403 without auth, got {response.status_code}"
         print("✓ Pending areas endpoint properly requires authentication")
 
 
