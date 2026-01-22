@@ -2,150 +2,116 @@
 The user wants to build a Progressive Web App called UnTrash Berlin.
 
 **PRODUCT REQUIREMENTS:**
--   **Frontend:** A map-based interface (OpenStreetMap) showing pins with pictures of trash locations in Berlin.
+-   **Frontend:** A map-based interface (OpenStreetMap) showing pins for trash locations and polygons for cleaned areas in Berlin.
 -   **User System:** Users sign up/log in via their Google accounts.
--   **Trash Reporting:**
-    -   Users can report litter they see by uploading a photo, which creates a red pin on the map.
-    -   Photos are scanned by AI to verify the presence of trash.
--   **Trash Collection:**
-    -   Other users can collect the reported trash and confirm collection by uploading a photo of the clean site.
-    -   The AI verifies the after photo to confirm the absence of trash.
-    -   Users can also clean an area without a prior report and get points. The cleaned area is marked green on the map.
+-   **Trash Reporting & Collection:**
+    -   Users report litter with a photo, which creates a pin on the map. The user's GPS location should be used for accuracy.
+    -   Other users can collect the reported trash and confirm by uploading a photo of the clean site.
+    -   Users can also clean an area without a prior report and get points.
+-   **Admin Verification:** All points are awarded only *after* an admin verifies the cleanup/collection photo. An admin must be notified of pending verifications. Admins can delete trash reports and cleaned areas from the map, which should also deduct any awarded points from the user. Banning users must work.
 -   **Gamification:**
-    -   Users receive points for reporting and collecting trash.
-    -   A tiered medal system (Bronze, Silver, Gold, Platinum, Diamond) is awarded based on points.
+    -   Users receive points for verified cleanup activities. The points system should be balanced.
+    -   A tiered medal system (Bronze, Silver, Gold, Platinum, Diamond) is awarded based on points. Medals should be visually appealing and animated.
     -   Weekly leaderboards for individuals and groups.
-    -   A My Medals section in the user profile.
+    -   A My Medals section in the user profile and on the dashboard.
 -   **Social & Groups:**
-    -   Users can join cleanup groups.
-    -   Group admins can manage members.
+    -   Users can create and join cleanup groups.
+    -   Group owners can delete their groups.
     -   Groups have a board to post cleanup events.
     -   Social media sharing for medals and achievements.
--   **Visualizations:** A heatmap to show the cleanest and trashiest parts of the city.
+-   **UI/UX:**
+    -   The app must be responsive and look good on smartphones, with a hamburger menu for small screens.
+    -   The welcome page should clearly explain how the app works without showing specific point values.
+    -   A How It Works section should be accessible from the main navigation.
 -   **Admin Panel:**
-    -   An admin role assigned to .
-    -   Admins can delete/change uploads, ban users, and verify cleanup photos before points are awarded.
-    -   Admins can delete group events.
--   **Dashboard:**
-    -   Show weekly cleanup/report statistics for Berlin.
-    -   Display upcoming events for the user's groups.
--   **Notifications:** Group members should receive push notifications and emails for new events (initially mocked).
--   **Data Management:** Collected trash reports should disappear from the map after one week.
+    -   An admin role is assigned to .
+    -   Admins can manage users (ban, reset points), content (delete reports/cleanups), and verifications.
+-   **Dashboard:** Show weekly stats, upcoming group events, and the user's medals.
+-   **Data Management:** Test agent data should not be visible on the frontend for regular users.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a FastAPI backend, React frontend, and MongoDB database. Key features like Google OAuth, trash reporting/collection, a points system, groups, and basic UI components are in place. Cloudinary is configured for image uploads using an unsigned preset. An admin panel has been started, but its features are incomplete and buggy. A mock notification system is implemented which logs to the console.
+A full-stack application with a FastAPI backend, React frontend, and MongoDB database. Key features like Google OAuth, a mobile-responsive map-based UI, trash reporting/collection, a rebalanced points system, groups, and an extensive admin panel are implemented. All points are now awarded only after an admin verifies the action. Cloudinary is used for image uploads. The app has been made responsive for mobile devices, and the UI has been refined based on user feedback.
 
 **Last working item**:
--   **Last item agent was working:** Implementing an admin verification system for area cleanings. The goal is to require an admin to approve a user's area cleaning submission before points are awarded. The agent created a new  model, updated the backend endpoints to handle a pending/approved status, and started updating the  component to display these pending requests for the admin to approve or reject.
+-   **Last item agent was working:** Ensuring points are only given after admin verification and removing any distinction between AI-verified and non-AI-verified cleanups. This involved updating the backend to prevent immediate point allocation upon reporting/collecting and simplifying the frontend to remove text about AI or specific point values.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both. The backend logic for creating and approving cleanings needs to be tested (e.g., via ), and the frontend  needs to be tested to ensure the UI works as expected for the admin.
+-   **Which testing method agent to use?** both
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1 (P0): Admin Approval for Area Cleanups**
--   **Issue 2 (P1): Admin Rights Not Visible/Functional**
--   **Issue 3 (P1): Admin Cannot Delete Trash Photos/Pins**
--   **Issue 4 (P2): Event Deletion Not Working**
--   **Issue 5 (P2): Dashboard Does Not Show Future Events**
+-   **Issue 1: Final Verification of Points System (P0)**
 
 **Issues Detail:**
--   **Issue 1: Admin Approval for Area Cleanups**
-    -   **Attempted fixes:** Backend models () and API endpoints () were created to support a review process.
-    -   **Next debug checklist:** The work was interrupted while editing . The next step is to complete the UI for fetching pending cleanups from , displaying them, and adding Approve and Reject buttons that call the respective admin APIs.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a core requirement from the user to prevent fraudulent point collection and give the admin control over data quality.
+-   **Issue 1: Final Verification of Points System**
+    -   **Attempted fixes:** The agent modified  to make all point awards contingent on admin approval. The endpoints  and  no longer grant points directly. Frontend components (, ) were updated to remove specific point promises.
+    -   **Next debug checklist:**
+        1.  Perform an end-to-end test:
+            a. Log in as a regular user, report a new piece of trash. Verify no points are awarded.
+            b. Collect that trash. Verify no points are awarded.
+            c. Log in as the admin (). Go to the Admin Panel.
+            d. Approve the pending collection.
+            e. Verify the collector is now awarded the correct number of points.
+        2.  Test the admin's Reset Points feature to ensure it correctly zeros out points and clears medals.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a core user requirement to ensure data quality and prevent gaming the system. The fix needs to be confirmed as working end-to-end.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on other issue:** None
-
--   **Issue 2: Admin Rights Not Visible/Functional**
-    -   **Attempted fixes:** The agent hardcoded  in  to receive an  flag during session creation.
-    -   **Next debug checklist:**
-        1.  Verify the backend  endpoint returns  when logged in as the admin user.
-        2.  Check the frontend  and  to ensure the Admin link is correctly rendered based on the user's  status.
-        3.  Inspect the frontend state management (e.g., React Context) to ensure the  flag is correctly stored and propagated after login.
-    -   **Why fix this issue and what will be achieved with the fix?** The admin cannot perform any of their required duties without access to the admin panel.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on other issue:** None
-
--   **Issue 3: Admin Cannot Delete Trash Photos/Pins**
-    -   **Attempted fixes:** An admin endpoint  was added to .
-    -   **Next debug checklist:** The frontend needs to be updated. Add a delete button for admins, either on the map pin's popup or within the  component, that calls this API endpoint.
-    -   **Why fix this issue and what will be achieved with the fix?** This gives the admin the ability to moderate content and remove incorrect or inappropriate trash reports.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on other issue:** Issue 2 (Admin Rights Not Visible/Functional)
-
--   **Issue 4: Event Deletion Not Working**
-    -   **Attempted fixes:** The backend endpoint  was updated to allow deletion by the event creator or an admin.
-    -   **Next debug checklist:**
-        1.  Verify the backend logic in  for this endpoint is correct. Test with  using both an admin and a creator's auth token.
-        2.  Inspect the frontend code in  to ensure the delete button is rendered correctly and calls the API properly. Check for any errors in the browser's developer console when the button is clicked.
-    -   **Why fix this issue and what will be achieved with the fix?** Group admins and event creators need to be able to manage and cancel events.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on other issue:** None
-
--   **Issue 5: Dashboard Does Not Show Future Events**
-    -   **Attempted fixes:** An endpoint  was added, and  was edited to fetch and display these events.
-    -   **Next debug checklist:**
-        1.  Test the  endpoint directly with  to ensure it returns the correct data.
-        2.  Debug the  hook in  responsible for fetching these events. Check the network requests and state variables in the browser.
-    -   **Why fix this issue and what will be achieved with the fix?** This feature provides users with a quick overview of their upcoming group activities, improving engagement.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on other issue:** None
 
 **In progress Task List**:
--   **Task 1: Complete the Admin Approval System for Area Cleanings**
-    -   **Where to resume:** Continue editing . Add the UI to fetch pending cleanings, display them with images and user info, and include Approve / Reject buttons.
-    -   **What will be achieved with this?** The admin will have a functional interface to moderate area cleaning submissions, fulfilling a key user requirement.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** Blocked on Issue 2, as the admin needs to be able to access the panel first.
+None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1)** Fix all pending issues listed above, starting with enabling admin access.
+    -   **(P1)** Refine the heatmap visualization.
 -   **Future Tasks:**
-    -   **(P2)** Implement a real notification system using an email/push service to replace the current mock implementation.
-    -   **(P3)** Refine the heatmap visualization based on user feedback.
+    -   **(P2)** Implement a real notification system (email/push) to replace the current mock implementation.
+    -   **(P2)** Refactor  to extract modal logic into separate components.
     -   **(P3)** Perform a final review for PWA configuration and GDPR compliance.
 
 **Completed work in this session**
--   **Cloudinary Integration:** Successfully set up image uploads using a user-provided API secret and an UnTrash unsigned upload preset. This resolved a major recurring issue.
--   **Admin Role & Panel:** Created backend logic to assign an admin role to  and created initial files for an  component and associated API endpoints.
--   **Auto-Cleanup Logic:** Implemented a backend scheduler in  to automatically hide collected trash reports from the map after one week.
--   **Social Sharing:** Added social media sharing buttons to the  component and a share modal that appears after collecting trash.
--   **Dashboard Simplification:** Updated  to show only the user's total points, as requested.
--   **Core App Features:** Built out the initial MVP including Google Auth, map view with pins (), trash reporting/collection modals, a points system, user profiles (), groups (), and rankings ().
+-   **Admin & Points System Overhaul:**
+    -   Implemented a mandatory admin verification step for *all* point-generating activities (trash collection, area cleanups).
+    -   Fixed all initial admin-related bugs (access, rights, content deletion).
+    -   Admins can now ban/unban users and reset/adjust user points.
+    -   Deleting reports now correctly deducts points from users.
+    -   Added a notification badge for admins when verifications are pending.
+-   **Gamification and UI Polish:**
+    -   Rebalanced the points system to make it more challenging.
+    -   Created new animated and visually appealing medal designs in the Profile and Dashboard.
+    -   Reset all user points to zero and implemented safeguards to prevent negative points.
+    -   Medals are now correctly calculated and displayed based on user points.
+-   **Mobile Responsiveness:**
+    -   Implemented a mobile-first responsive design with a hamburger menu for .
+    -   Optimized layouts for , , , and  for small screens.
+-   **Feature Enhancements:**
+    -   Group owners can now delete their own groups.
+    -   Admins can delete cleaned area polygons directly from the map.
+    -   Trash reporting now uses the browser's Geolocation API for accurate positioning.
+    -   Simplified the Welcome page with a How It Works section and added a dedicated page for it.
+-   **Deployment Readiness:**
+    -   Resolved deployment blocker by removing hardcoded URLs and fixing the  file.
+    -   Test agent data is now filtered from non-admin views.
 
 **Earlier issues found/mentioned but not fixed**
-The issues listed in the All Pending/In progress Issue list section cover this. The primary pattern was the agent implementing backend changes but not fully completing or verifying the end-to-end frontend integration, leading to the user reporting that the features were not working.
+None. All major reported issues have been addressed.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** N/A
--   **Recurrence count:** N/A
--   **Status:** N/A
+-   N/A
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frontend:** React, Tailwind CSS, Leaflet.js (for maps), react-leaflet, react-leaflet-heatmap
+-   **Frontend:** React, Tailwind CSS, Leaflet.js, react-leaflet
 -   **Backend:** FastAPI (Python), Motor (async MongoDB driver)
 -   **Database:** MongoDB
--   **Image Storage:** Cloudinary
--   **Authentication:** Google OAuth handled via Emergent's infrastructure. Session management with JWTs stored in HTTPOnly cookies.
--   **AI:** OpenAI Vision via Emergent LLM Key for image verification.
+-   **Image Storage:** Cloudinary (unsigned uploads)
+-   **Authentication:** Emergent-managed Google OAuth with JWT sessions.
+-   **AI:** OpenAI Vision via Emergent LLM Key for image verification (logic exists but is no longer used for awarding points).
 
 **key DB schema**
 -   : 
@@ -154,80 +120,71 @@ The issues listed in the All Pending/In progress Issue list section cover this. 
 -   : 
 
 **changes in tech stack**
-The image handling logic was changed multiple times:
-1.  Initial attempt with Cloudinary (failed due to bad credentials).
-2.  Fallback to a temporary base64 encoding and backend storage solution.
-3.  Final implementation using correct Cloudinary credentials with an unsigned upload preset on the frontend.
+None.
 
 **All files of reference**
--   : The core FastAPI application containing all API logic, database models, and business rules.
--   : A large, critical component that manages the map display, markers, popups, and all modals for reporting, collecting, and cleaning.
--   : The new component for admin-specific features. Currently in progress.
--   : The user's main landing page after login.
--   : Manages group information and events.
--   : Contains all secrets, including MongoDB URL, Cloudinary credentials, and the Emergent LLM Key.
+-   : Contains all API logic, DB models, and new verification rules.
+-   : UI for all admin functions, including verification queues.
+-   : Manages map, pins, popups, and user action modals. Updated to use GPS and admin delete functions.
+-   : Main user dashboard, now mobile-responsive with a hamburger menu and medal display.
+-   : User profile with new animated medals.
+-   : Main router, updated with the How It Works route.
+-   : New static component explaining the app's functionality.
+-   : Now includes Cloudinary configuration.
 
 **Areas that need refactoring**:
--   : This file is overly complex. The logic for the various modals (Report, Collect, Clean Area) should be extracted into separate components. State management for modals and uploads could be managed by custom hooks to simplify the main component.
--   : This file was created for the temporary base64 upload solution and is likely no longer needed. It should be reviewed and probably deleted.
+-   : Remains overly complex. The logic for various modals (Report, Collect, Clean Area) should be extracted into separate, self-contained components.
+-   : This file contains multiple distinct components (, , etc.). They should be split into their own files under a  directory.
 
 **key api endpoints**
--   : Google login, logout, and user session ().
--   : GET, POST for trash reports.
--   : POST to collect trash.
--   : POST to report a cleaned area.
--   : GET signature for signed uploads (obsolete, now using unsigned).
--   : CRUD for groups and events.
--   : Endpoints for banning users, deleting reports, and approving cleanings.
+-   : Sets a user's points.
+-   : Deletes a cleaned area report.
+-   : Approves a collection and awards points.
+-   : Deletes a group (owner only).
+-   : Admin-only view to see test data.
 
 **Critical Info for New Agent**
--   **Admin User:** The admin email is hardcoded as  in . All admin features must be tested while logged in as this user.
--   **Cloudinary Setup:** The application now uses an **unsigned upload preset** named UnTrash on the frontend. Do not revert to using backend signatures. The credentials (, , ) are in  but are only used for secure, server-side operations like AI verification, not for client-side uploads.
--   **User Feedback Cycle:** The user is actively testing and providing detailed feedback. Pay close attention to the list of pending issues as they directly reflect the user's current frustrations. Fixes should be verified end-to-end before being presented as complete.
--   **Notifications are Mocked:** Do not attempt to implement a real email/push service unless explicitly requested. The current mock system is what the user agreed to for now.
+-   **Admin User:** The admin email is hardcoded as . All admin features must be tested while logged in as this user.
+-   **Points System:** No points are awarded until an admin approves the activity via the Admin Panel. The UI no longer mentions different point values or AI verification.
+-   **Responsiveness:** The app has been refactored for mobile-first responsiveness. The primary navigation is in  and uses a hamburger menu on small screens.
+-   **Location Services:** Trash reporting now relies on the browser's Geolocation API. This will trigger a permission prompt for the user.
 
 **documents and test reports created in this job**
--   /app/auth_testing.md
--   /app/image_testing.md
--   /app/UPDATES.md
--   /app/IMAGE_UPLOAD_SOLUTION.md
--   /app/SOCIAL_SHARING_GUIDE.md
--   /app/TROUBLESHOOTING_UPLOADS.md
--   /app/NEW_FEATURES_GUIDE.md
--   /app/CLOUDINARY_FIX_GUIDE.md
--   /app/UNSIGNED_UPLOAD_GUIDE.md
--   /app/AUTO_CLEANUP_GUIDE.md
+-   /app/test_reports/iteration_1.json
+-   /app/test_reports/iteration_2.json
+-   /app/test_reports/iteration_3.json
+-   /app/test_reports/iteration_4.json
+-   /app/memory/PRD.md
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Requests admin rights for , admin verification for cleanups, fixing event deletion, showing future events on the dashboard, and simplifying the points display. (IN PROGRESS)
-2.  **User:** Confirms the UnTrash Cloudinary upload preset is . (RESOLVED)
-3.  **User:** Provides the name of the Cloudinary Upload Preset (UnTrash). (RESOLVED)
-4.  **User:** States image upload still doesn't work and asks what to configure in Cloudinary. (RESOLVED)
-5.  **User:** Provides the correct Cloudinary API secret after the agent identified it was wrong. (RESOLVED)
-6.  **User:** Asks for a different solution if Cloudinary doesn't work, as uploads are still failing. (RESOLVED)
-7.  **User:** Reports that image uploading is still not working. (RESOLVED)
-8.  **User:** Requests social media sharing, a place to view medals, and asks if they need to access the backend. (RESOLVED)
-9.  **User:** Asks to add a heatmap layer, fix trash/cleanup reporting, make group events deletable, ensure pins appear on the map, and show weekly stats on the dashboard. (PARTIALLY RESOLVED, SOME ISSUES REMAIN)
-10. **User:** Approves the development plan. (RESOLVED)
+1.  **User:** Ensure points reset works, points are only given after verification, and no distinction is made for AI verification. (IN PROGRESS)
+2.  **User:** Simplify the welcome page text and fix the location report to use the phone's GPS. (DONE)
+3.  **User:** Add a How does it work? section to the main menu. (DONE)
+4.  **User:** Remove stats from the welcome page, clarify usage, and show medals on the dashboard. (DONE)
+5.  **User:** Make the app layout responsive for small smartphone screens. (DONE)
+6.  **User:** Run a deployment health check. (DONE)
+7.  **User:** Add the ability for admins to delete cleaned areas from the map. (DONE)
+8.  **User:** Set all user points to zero and ensure the point system prevents negative values. (DONE)
+9.  **User:** Filter test data, scale back points, allow admins to reset points, and create animated medals. (DONE)
+10. **User:** Ensure deleting reports deducts points and that the user banning feature works. (DONE)
 
 **Project Health Check:**
--   **Broken:**
-    -   Admin functionality (access, content moderation, verification).
-    -   Group event deletion.
-    -   Dashboard display of upcoming events.
--   **Mocked:**
-    -   Email/Push notification system.
+-   **Broken:** None.
+-   **Mocked:** Email/Push notification system.
 
 **3rd Party Integrations**
--   **OpenAI Vision (via Emergent LLM Key):** Used for AI-powered verification of trash/cleanup photos. Uses Emergent LLM Key.
--   **Google OAuth (via Emergent):** Handles user authentication and login.
--   **Cloudinary:** Manages image storage. Requires user-provided API Key, Secret, and Cloud Name.
+-   **OpenAI Vision (Emergent LLM Key):** Backend logic exists for AI image analysis but is not currently used for awarding points. Uses Emergent LLM Key.
+-   **Google OAuth (Emergent-managed):** Handles user authentication.
+-   **Cloudinary:** Manages image storage. Requires User API Key/Secret.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None
--   **Known regressions:** Admin features, event deletion, and dashboard events display were implemented but are not working correctly according to the user.
+-   **Test files created:** None persistent.
+-   **Known regressions:** None.
 
 **Credentials to test flow:**
--   **Admin Account:** Log in with Google using the email .</analysis>
+-   **Admin Account:** Log in via Google with the email .
+
+**What agent forgot to execute**
+-   The agent implemented the final changes to the points system (making all points dependent on admin verification) but did not perform a final end-to-end test to confirm the entire flow works as expected.</analysis>
