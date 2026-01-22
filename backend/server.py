@@ -538,9 +538,9 @@ async def clean_area(request: Request, data: dict):
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    # Calculate points based on area size (5 points per 100 sq meters, min 25)
+    # Calculate points based on area size (2 points per 100 sq meters, min 10)
     area_size = data.get("area_size", 100)
-    points = max(25, int(area_size / 100 * 5))
+    points = max(10, int(area_size / 100 * 2))  # Reduced from 5 pts/100m², min 25
     
     # Area stays green for 7 days
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
@@ -554,7 +554,7 @@ async def clean_area(request: Request, data: dict):
         points_awarded=points,
         expires_at=expires_at,
         ai_verified=False,
-        admin_approved=False  # Requires admin approval
+        admin_approved=False
     )
     
     await db.area_cleanings.insert_one(area.model_dump())
