@@ -266,12 +266,17 @@ async def create_session(session_id: str, response: Response):
         if existing_user:
             user_id = existing_user["user_id"]
             # Update user info
+            update_data = {
+                "name": data["name"],
+                "picture": data["picture"]
+            }
+            # Set admin flag for specific email
+            if data["email"] == "stephanj.thurm@gmail.com":
+                update_data["is_admin"] = True
+            
             await db.users.update_one(
                 {"user_id": user_id},
-                {"$set": {
-                    "name": data["name"],
-                    "picture": data["picture"]
-                }}
+                {"$set": update_data}
             )
         else:
             # Create new user
@@ -279,7 +284,8 @@ async def create_session(session_id: str, response: Response):
                 user_id=user_id,
                 email=data["email"],
                 name=data["name"],
-                picture=data["picture"]
+                picture=data["picture"],
+                is_admin=(data["email"] == "stephanj.thurm@gmail.com")  # Set admin for your email
             )
             await db.users.insert_one(user.model_dump())
         
