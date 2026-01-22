@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, Calendar, MapPin, ArrowLeft, X } from 'lucide-react';
+import { Users, Plus, Calendar, MapPin, ArrowLeft, X, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -71,10 +71,31 @@ function Groups({ user }) {
       loadGroups();
       window.location.reload();
     } catch (error) {
-      alert('Failed to leave group');
+      alert(error.response?.data?.detail || 'Failed to leave group');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteGroup = async (groupId) => {
+    if (!window.confirm('Are you sure you want to DELETE this group? This will remove all members and events. This action cannot be undone.')) return;
+    setLoading(true);
+    try {
+      await axios.delete(`${API}/groups/${groupId}`, {
+        withCredentials: true
+      });
+      loadGroups();
+      window.location.reload();
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to delete group');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Check if user is the owner of a group (first admin)
+  const isGroupOwner = (group) => {
+    return group.admin_ids && group.admin_ids[0] === user?.user_id;
   };
 
   return (
