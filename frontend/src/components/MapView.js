@@ -811,11 +811,11 @@ function CollectTrashModal({ report, onClose, onSubmit, loading }) {
 
     setUploading(true);
     try {
-      const proofUrl = await uploadImageSimple(proofImage);
+      const proofUrl = await uploadToCloudinary(proofImage);
       await onSubmit(report.report_id, proofUrl);
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload proof image: ' + error.message);
+      alert('Failed to upload proof image. Please try again.');
     } finally {
       setUploading(false);
     }
