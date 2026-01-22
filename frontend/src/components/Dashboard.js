@@ -8,10 +8,12 @@ const API = `${BACKEND_URL}/api`;
 function Dashboard({ user }) {
   const navigate = useNavigate();
   const [weeklyStats, setWeeklyStats] = useState({ reports: 0, collections: 0 });
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadWeeklyStats();
+    loadUpcomingEvents();
   }, []);
 
   const loadWeeklyStats = async () => {
@@ -27,6 +29,20 @@ function Dashboard({ user }) {
       console.error('Error loading stats:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUpcomingEvents = async () => {
+    try {
+      const response = await fetch(`${API}/events/upcoming`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUpcomingEvents(data);
+      }
+    } catch (error) {
+      console.error('Error loading events:', error);
     }
   };
 
