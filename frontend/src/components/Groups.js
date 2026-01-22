@@ -392,19 +392,32 @@ function GroupDetailsModal({ group, onClose, isMember }) {
               <p className="text-gray-500 text-sm">No upcoming events</p>
             ) : (
               events.map((event) => (
-                <div key={event.event_id} className="p-3 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900">{event.title}</h4>
-                  {event.description && <p className="text-sm text-gray-600 mt-1">{event.description}</p>}
-                  <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                    <span className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      {new Date(event.event_date).toLocaleString()}
-                    </span>
-                    {event.location && (
-                      <span className="flex items-center">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        Location set
-                      </span>
+                <div key={event.event_id} className="p-3 bg-gray-50 rounded-lg relative">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">{event.title}</h4>
+                      {event.description && <p className="text-sm text-gray-600 mt-1">{event.description}</p>}
+                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                        <span className="flex items-center">
+                          <Calendar className="w-4 h-4 mr-1" />
+                          {new Date(event.event_date).toLocaleString()}
+                        </span>
+                        {event.location && (
+                          <span className="flex items-center">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            Location set
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {(isAdmin || currentUserId === event.created_by) && (
+                      <button
+                        onClick={() => handleDeleteEvent(event.event_id)}
+                        className="text-red-600 hover:text-red-800 ml-2"
+                        title="Delete event"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
                 </div>
