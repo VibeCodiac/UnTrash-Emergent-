@@ -344,6 +344,16 @@ function MapView({ user }) {
                       Collect This Trash
                     </button>
                   )}
+                  {user?.is_admin && (
+                    <button
+                      onClick={() => handleDeleteTrashReport(report.report_id)}
+                      className="mt-2 w-full flex items-center justify-center space-x-1 bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700"
+                      data-testid={`delete-report-${report.report_id}`}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Delete Report</span>
+                    </button>
+                  )}
                 </div>
               </Popup>
             </Marker>
