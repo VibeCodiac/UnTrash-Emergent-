@@ -500,14 +500,16 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
 
     setUploading(true);
     try {
-      const imageUrl = await uploadToCloudinary(image);
+      // Use simple upload instead of Cloudinary
+      const imageUrl = await uploadImageSimple(image);
       await onSubmit({
         location,
         image_url: imageUrl,
         thumbnail_url: imageUrl
       });
     } catch (error) {
-      alert('Failed to upload image');
+      console.error('Upload error:', error);
+      alert('Failed to upload image: ' + error.message);
     } finally {
       setUploading(false);
     }
