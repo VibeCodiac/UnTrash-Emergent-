@@ -207,7 +207,7 @@ function Dashboard({ user }) {
               <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-1" data-testid="welcome-message">
                 Welcome, {user?.name}!
               </h1>
-              <p className="text-sm md:text-base text-gray-600">Let's make Berlin cleaner together</p>
+              <p className="text-sm md:text-base text-gray-600">Let&apos;s make Berlin cleaner together</p>
             </div>
             <div className="text-left sm:text-right w-full sm:w-auto">
               <p className="text-3xl md:text-4xl font-bold text-green-600" data-testid="user-points">{user?.total_points || 0}</p>
