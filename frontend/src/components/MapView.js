@@ -223,10 +223,10 @@ function MapView({ user }) {
     setLoading(true);
     setMessage(null);
     try {
-      const response = await axios.post(`${API}/areas/clean`, data, {
+      await axios.post(`${API}/areas/clean`, data, {
         withCredentials: true
       });
-      setMessage({ type: 'success', text: `Area cleaned! +${response.data.points_awarded} points` });
+      setMessage({ type: 'success', text: 'Area cleaning submitted! Awaiting admin verification for points.' });
       setShowCleanAreaModal(false);
       loadCleanedAreas();
       loadHeatMapData();
@@ -246,11 +246,11 @@ function MapView({ user }) {
       }, {
         withCredentials: true
       });
-      const { points, ai_verified } = response.data;
-      setLastCollectionPoints(points);
+      const { points_pending } = response.data;
+      setLastCollectionPoints(points_pending);
       setMessage({ 
         type: 'success', 
-        text: `Trash collected! +${points} points ${ai_verified ? '(AI verified ✓)' : ''}` 
+        text: 'Trash collected! Awaiting admin verification for points.' 
       });
       setShowCollectModal(false);
       setSelectedReport(null);
