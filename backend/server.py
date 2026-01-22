@@ -725,6 +725,105 @@ async def get_weekly_stats():
         "collections": collections_count
     }
 
+@api_router.get("/events/upcoming")
+async def get_upcoming_events(request: Request, limit: int = 5):
+    """Get upcoming events for user's groups"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Get user's groups
+    user_groups = user.joined_groups or []
+    
+    if not user_groups:
+        return []
+    
+    # Get upcoming events from user's groups
+    now = datetime.now(timezone.utc)
+    events = await db.group_events.find(
+        {
+            "group_id": {"$in": user_groups},
+            "event_date": {"$gte": now}
+        },
+        {"_id": 0}
+    ).sort("event_date", 1).limit(limit).to_list(limit)
+    
+    # Add group names to events
+    for event in events:
+        group = await db.groups.find_one({"group_id": event["group_id"]}, {"_id": 0, "name": 1})
+        event["group_name"] = group.get("name", "Unknown") if group else "Unknown"
+    
+    return events
+
+# ==================== NOTIFICATION ENDPOINTS ====================
+
+class NotificationPreferences(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    user_id: str
+    email_notifications: bool = True
+    push_notifications: bool = False
+    notify_new_events: bool = True
+    notify_nearby_trash: bool = False
+    notify_group_updates: bool = True
+
+@api_router.get("/settings/notifications")
+async def get_notification_settings(request: Request):
+    """Get user notification preferences"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    prefs = await db.notification_preferences.find_one({"user_id": user.user_id}, {"_id": 0})
+    if not prefs:
+        # Create default preferences
+        default_prefs = NotificationPreferences(user_id=user.user_id)
+        await db.notification_preferences.insert_one(default_prefs.model_dump())
+        return default_prefs
+    
+    return NotificationPreferences(**prefs)
+
+@api_router.put("/settings/notifications")
+async def update_notification_settings(request: Request, preferences: dict):
+    """Update user notification preferences"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    await db.notification_preferences.update_one(
+        {"user_id": user.user_id},
+        {"$set": preferences},
+        upsert=True
+    )
+    
+    return {"message": "Preferences updated"}
+
+@api_router.get("/notifications/mock")
+async def get_mock_notifications(request: Request, limit: int = 20):
+    """Get mock notification log for testing"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    notifications = await db.mock_notifications.find(
+        {"user_id": user.user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return notifications
+
+async def send_mock_notification(user_id: str, notification_type: str, title: str, message: str):
+    """Log a mock notification (simulates sending)"""
+    notification = {
+        "user_id": user_id,
+        "type": notification_type,
+        "title": title,
+        "message": message,
+        "created_at": datetime.now(timezone.utc),
+        "read": False
+    }
+    await db.mock_notifications.insert_one(notification)
+    logger.info(f"Mock notification sent to {user_id}: {title}")
+
 # Include router
 app.include_router(api_router)
 
