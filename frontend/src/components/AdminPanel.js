@@ -71,6 +71,27 @@ function AdminPanel({ user }) {
     }
   };
 
+  const handleApproveArea = async (areaId) => {
+    try {
+      const response = await axios.post(`${API}/admin/areas/${areaId}/approve`, {}, { withCredentials: true });
+      setMessage({ type: 'success', text: `Area approved! ${response.data.points} points awarded` });
+      loadData();
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to approve area' });
+    }
+  };
+
+  const handleRejectArea = async (areaId) => {
+    if (!window.confirm('Are you sure you want to reject this area cleaning?')) return;
+    try {
+      await axios.delete(`${API}/admin/areas/${areaId}`, { withCredentials: true });
+      setMessage({ type: 'success', text: 'Area cleaning rejected' });
+      loadData();
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to reject area' });
+    }
+  };
+
   if (!user?.is_admin) {
     return null;
   }
