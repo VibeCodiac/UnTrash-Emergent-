@@ -132,7 +132,7 @@ function Settings({ user }) {
               <Info className="w-5 h-5 text-blue-600 mt-0.5" />
               <div className="text-sm text-blue-800">
                 <p className="font-semibold mb-1">Testing Mode - Mock Notifications</p>
-                <p>Notifications are currently simulated for testing. When events are created, you'll see mock notifications below instead of receiving real emails. You can upgrade to real email notifications later!</p>
+                <p>Notifications are currently simulated for testing. When events are created, you&apos;ll see mock notifications below instead of receiving real emails. You can upgrade to real email notifications later!</p>
               </div>
             </div>
           </div>
