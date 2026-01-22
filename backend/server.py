@@ -442,11 +442,11 @@ async def report_trash(request: Request, data: dict):
         thumbnail_url=data.get("thumbnail_url"),
         reporter_id=user.user_id,
         ai_verified=ai_verified,
-        points_awarded=10
+        points_awarded=5  # Reduced from 10
     )
     
     await db.trash_reports.insert_one(report.model_dump())
-    await update_user_points(user.user_id, 10)
+    await update_user_points(user.user_id, 5)  # Reduced from 10
     
     return report
 
@@ -467,8 +467,8 @@ async def collect_trash(request: Request, report_id: str, data: dict):
     # Verify trash is gone using AI
     ai_verified = not await verify_trash_in_image(data["proof_image_url"])
     
-    # Points to be awarded after admin verification
-    points = 50 if ai_verified else 30
+    # Points to be awarded after admin verification (reduced)
+    points = 25 if ai_verified else 15  # Reduced from 50/30
     
     await db.trash_reports.update_one(
         {"report_id": report_id},
@@ -478,9 +478,9 @@ async def collect_trash(request: Request, report_id: str, data: dict):
             "collected_at": datetime.now(timezone.utc),
             "collection_image_url": data["proof_image_url"],
             "ai_verified": ai_verified,
-            "admin_verified": False,  # Requires admin approval
+            "admin_verified": False,
             "points_awarded": points,
-            "points_given": False  # Points not yet given
+            "points_given": False
         }}
     )
     
