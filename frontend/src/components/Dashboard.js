@@ -83,6 +83,7 @@ function Dashboard({ user }) {
     { path: '/groups', icon: Users, label: 'Groups', testId: 'nav-groups-button' },
     { path: '/rankings', icon: Trophy, label: 'Rankings', testId: 'nav-rankings-button' },
     { path: '/profile', icon: User, label: 'Profile', testId: 'nav-profile-button' },
+    { path: '/how-it-works', icon: HelpCircle, label: 'How It Works', testId: 'nav-how-button' },
     { path: '/settings', icon: Settings, label: 'Settings', testId: 'nav-settings-button' },
   ];
 
