@@ -361,6 +361,16 @@ function MapView({ user }) {
                   <p className="text-sm font-semibold text-green-600 mb-1">Cleaned Area</p>
                   <p className="text-xs text-gray-600">Size: {Math.round(area.area_size)} m²</p>
                   <p className="text-xs text-gray-600">Points: {area.points_awarded}</p>
+                  {user?.is_admin && (
+                    <button
+                      onClick={() => handleDeleteCleanedArea(area.area_id)}
+                      className="mt-2 w-full flex items-center justify-center space-x-1 bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700"
+                      data-testid={`delete-area-${area.area_id}`}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Delete Area</span>
+                    </button>
+                  )}
                 </div>
               </Popup>
             </Polygon>
