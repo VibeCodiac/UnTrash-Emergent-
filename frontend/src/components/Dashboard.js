@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Users, Trophy, User, LogOut, Award, Share2, Settings, Calendar, Shield } from 'lucide-react';
+import { MapPin, Users, Trophy, User, LogOut, Award, Share2, Settings, Calendar, Shield, Bell } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -9,12 +9,16 @@ function Dashboard({ user }) {
   const navigate = useNavigate();
   const [weeklyStats, setWeeklyStats] = useState({ reports: 0, collections: 0 });
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadWeeklyStats();
     loadUpcomingEvents();
-  }, []);
+    if (user?.is_admin) {
+      loadPendingCount();
+    }
+  }, [user]);
 
   const loadWeeklyStats = async () => {
     try {
@@ -43,6 +47,20 @@ function Dashboard({ user }) {
       }
     } catch (error) {
       console.error('Error loading events:', error);
+    }
+  };
+
+  const loadPendingCount = async () => {
+    try {
+      const response = await fetch(`${API}/admin/pending-count`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPendingCount(data.total_pending || 0);
+      }
+    } catch (error) {
+      console.error('Error loading pending count:', error);
     }
   };
 
