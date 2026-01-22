@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, Users, Trash2, AlertCircle, Ban, CheckCircle, Bell, ImageIcon, MapPin } from 'lucide-react';
+import { ArrowLeft, Shield, Users, Trash2, AlertCircle, Ban, CheckCircle, Bell, ImageIcon, MapPin, RotateCcw } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -16,6 +16,7 @@ function AdminPanel({ user }) {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
+  const [resetPointsModal, setResetPointsModal] = useState(null);
 
   useEffect(() => {
     if (!user?.is_admin) {
@@ -29,7 +30,7 @@ function AdminPanel({ user }) {
     try {
       const [usersRes, trashRes, areasRes, collectionsRes, countsRes] = await Promise.all([
         axios.get(`${API}/admin/users?limit=100`, { withCredentials: true }),
-        axios.get(`${API}/trash/list?limit=100`, { withCredentials: true }),
+        axios.get(`${API}/trash/list?limit=100&include_test=true`, { withCredentials: true }),
         axios.get(`${API}/admin/areas/pending`, { withCredentials: true }),
         axios.get(`${API}/admin/collections/pending`, { withCredentials: true }),
         axios.get(`${API}/admin/pending-count`, { withCredentials: true })
@@ -64,6 +65,17 @@ function AdminPanel({ user }) {
       loadData();
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to unban user' });
+    }
+  };
+
+  const handleResetPoints = async (userId, data) => {
+    try {
+      await axios.post(`${API}/admin/users/${userId}/reset-points`, data, { withCredentials: true });
+      setMessage({ type: 'success', text: 'User points reset successfully' });
+      setResetPointsModal(null);
+      loadData();
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to reset points' });
     }
   };
 
