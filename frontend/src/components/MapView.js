@@ -84,6 +84,32 @@ function HeatMapLayer({ data, show }) {
   return null;
 }
 
+// Component to display images from backend
+function ImageDisplay({ src, alt, className }) {
+  const [dataUrl, setDataUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const url = await getImageDataUrl(src);
+        setDataUrl(url);
+      } catch (error) {
+        console.error('Error loading image:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadImage();
+  }, [src]);
+
+  if (loading) {
+    return <div className={className + " bg-gray-200 animate-pulse"}></div>;
+  }
+
+  return <img src={dataUrl || src} alt={alt} className={className} />;
+}
+
 function MapView({ user }) {
   const navigate = useNavigate();
   const [trashReports, setTrashReports] = useState([]);
