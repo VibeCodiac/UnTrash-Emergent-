@@ -190,12 +190,14 @@ function MapView({ user }) {
         withCredentials: true
       });
       const { points, ai_verified } = response.data;
+      setLastCollectionPoints(points);
       setMessage({ 
         type: 'success', 
         text: `Trash collected! +${points} points ${ai_verified ? '(AI verified ✓)' : ''}` 
       });
       setShowCollectModal(false);
       setSelectedReport(null);
+      setShowShareModal(true); // Show share modal after successful collection
       loadTrashReports();
       loadHeatMapData();
     } catch (error) {
