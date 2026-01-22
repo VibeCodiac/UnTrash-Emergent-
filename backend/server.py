@@ -319,39 +319,59 @@ async def logout(request: Request, response: Response):
     response.delete_cookie("session_token", path="/")
     return {"message": "Logged out"}
 
-# ==================== CLOUDINARY ENDPOINTS ====================
+# ==================== IMAGE UPLOAD ENDPOINTS ====================
 
-@api_router.get("/cloudinary/signature")
-async def generate_cloudinary_signature(
-    request: Request,
-    resource_type: str = Query("image", enum=["image", "video"]),
-    folder: str = "untrash"
-):
-    """Generate signed upload parameters for Cloudinary"""
+@api_router.post("/images/upload")
+async def upload_image_base64(request: Request, data: dict):
+    """Upload image as base64 (simple storage solution)"""
     user = await get_user_from_session(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    timestamp = int(time.time())
-    params = {
-        "timestamp": timestamp,
-        "folder": folder,
-        "resource_type": resource_type
-    }
+    try:
+        # Get base64 image data
+        image_data = data.get("image")
+        if not image_data:
+            raise HTTPException(status_code=400, detail="No image data provided")
+        
+        # If it's a data URL, extract just the base64 part
+        if image_data.startswith('data:'):
+            image_data = image_data.split(',')[1]
+        
+        # Store in MongoDB (simple solution)
+        image_doc = {
+            "image_id": f"img_{uuid.uuid4().hex[:12]}",
+            "user_id": user.user_id,
+            "image_data": image_data,
+            "created_at": datetime.now(timezone.utc)
+        }
+        
+        await db.images.insert_one(image_doc)
+        
+        # Return URL that points to our image endpoint
+        image_url = f"/api/images/{image_doc['image_id']}"
+        
+        return {
+            "url": image_url,
+            "image_id": image_doc['image_id']
+        }
+    except Exception as e:
+        logger.error(f"Image upload error: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@api_router.get("/images/{image_id}")
+async def get_image(image_id: str):
+    """Retrieve image by ID"""
+    image_doc = await db.images.find_one({"image_id": image_id}, {"_id": 0})
+    if not image_doc:
+        raise HTTPException(status_code=404, detail="Image not found")
     
-    signature = cloudinary.utils.api_sign_request(
-        params,
-        os.environ.get("CLOUDINARY_API_SECRET")
-    )
+    # Return image as base64 data URL
+    image_data = image_doc['image_data']
+    # Determine format (default to jpeg)
+    data_url = f"data:image/jpeg;base64,{image_data}"
     
-    return {
-        "signature": signature,
-        "timestamp": timestamp,
-        "cloud_name": os.environ.get("CLOUDINARY_CLOUD_NAME"),
-        "api_key": os.environ.get("CLOUDINARY_API_KEY"),
-        "folder": folder,
-        "resource_type": resource_type
-    }
+    return JSONResponse(content={"data_url": data_url})
 
 # ==================== TRASH ENDPOINTS ====================
 
