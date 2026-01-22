@@ -493,9 +493,10 @@ async def collect_trash(request: Request, report_id: str, data: dict):
 @api_router.get("/trash/list")
 async def list_trash_reports(
     status: Optional[str] = None,
-    limit: int = 100
+    limit: int = 100,
+    include_test: bool = False
 ):
-    """Get list of trash reports"""
+    """Get list of trash reports (excludes test data by default)"""
     from datetime import timedelta
     
     # Calculate date 7 days ago
@@ -510,12 +511,18 @@ async def list_trash_reports(
         # Default: Show all reported trash + collected trash from last 7 days
         query = {
             "$or": [
-                {"status": "reported"},  # Show all reported trash
+                {"status": "reported"},
                 {
                     "status": "collected",
-                    "collected_at": {"$gte": week_ago}  # Only show collected trash from last week
+                    "collected_at": {"$gte": week_ago}
                 }
             ]
+        }
+    
+    # Filter out test data (placeholder images, test URLs)
+    if not include_test:
+        query["image_url"] = {
+            "$not": {"$regex": "(placeholder|test|via\\.placeholder|example\\.com)", "$options": "i"}
         }
     
     reports = await db.trash_reports.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
