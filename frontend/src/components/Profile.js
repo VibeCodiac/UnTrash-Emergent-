@@ -203,9 +203,9 @@ function Profile({ user }) {
 
         {/* Progress to Next Medal */}
         {user?.monthly_points !== undefined && (
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">This Month's Progress</h3>
-            <div className="space-y-4">
+          <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">This Month&apos;s Progress</h3>
+            <div className="space-y-3 md:space-y-4">
               {Object.entries(MEDAL_THRESHOLDS).map(([name, points]) => {
                 const progress = Math.min(100, (user.monthly_points / points) * 100);
                 const achieved = user.monthly_points >= points;
