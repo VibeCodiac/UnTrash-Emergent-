@@ -1040,7 +1040,6 @@ async def reset_user_points(request: Request, user_id: str, data: dict = None):
         "medals_cleared": clear_medals,
         "medals_adjusted": not clear_medals
     }
-    }
 
 @api_router.put("/admin/trash/{report_id}")
 async def update_trash_report(request: Request, report_id: str, data: dict):
