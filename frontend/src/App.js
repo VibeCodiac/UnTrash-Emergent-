@@ -9,6 +9,7 @@ import Dashboard from './components/Dashboard';
 import Groups from './components/Groups';
 import Rankings from './components/Rankings';
 import Profile from './components/Profile';
+import Settings from './components/Settings';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
