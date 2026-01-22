@@ -316,11 +316,6 @@ function GroupDetailsModal({ group, onClose, isMember }) {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isAppAdmin, setIsAppAdmin] = useState(false);
 
-  useEffect(() => {
-    loadGroupDetails();
-    loadCurrentUser();
-  }, [group.group_id]);
-
   const loadCurrentUser = async () => {
     try {
       const response = await axios.get(`${API}/auth/me`, { withCredentials: true });
@@ -343,6 +338,11 @@ function GroupDetailsModal({ group, onClose, isMember }) {
       console.error('Error loading group details:', error);
     }
   };
+
+  useEffect(() => {
+    loadGroupDetails();
+    loadCurrentUser();
+  }, [group.group_id]);
 
   const handleCreateEvent = async (eventData) => {
     try {
