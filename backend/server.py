@@ -452,7 +452,7 @@ async def report_trash(request: Request, data: dict):
 
 @api_router.post("/trash/collect/{report_id}")
 async def collect_trash(request: Request, report_id: str, data: dict):
-    """Mark trash as collected with proof photo"""
+    """Mark trash as collected with proof photo (requires admin verification for points)"""
     user = await get_user_from_session(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -464,9 +464,10 @@ async def collect_trash(request: Request, report_id: str, data: dict):
     if report["status"] == "collected":
         raise HTTPException(status_code=400, detail="Already collected")
     
-    # Verify trash is gone
+    # Verify trash is gone using AI
     ai_verified = not await verify_trash_in_image(data["proof_image_url"])
     
+    # Points to be awarded after admin verification
     points = 50 if ai_verified else 30
     
     await db.trash_reports.update_one(
@@ -475,22 +476,19 @@ async def collect_trash(request: Request, report_id: str, data: dict):
             "status": "collected",
             "collector_id": user.user_id,
             "collected_at": datetime.now(timezone.utc),
+            "collection_image_url": data["proof_image_url"],
             "ai_verified": ai_verified,
-            "points_awarded": points
+            "admin_verified": False,  # Requires admin approval
+            "points_awarded": points,
+            "points_given": False  # Points not yet given
         }}
     )
     
-    await update_user_points(user.user_id, points)
-    
-    # Update group points if user is in groups
-    if user.joined_groups:
-        for group_id in user.joined_groups:
-            await db.groups.update_one(
-                {"group_id": group_id},
-                {"$inc": {"total_points": points, "weekly_points": points}}
-            )
-    
-    return {"message": "Collected successfully", "points": points, "ai_verified": ai_verified}
+    return {
+        "message": "Collection submitted for admin verification",
+        "points_pending": points,
+        "ai_verified": ai_verified
+    }
 
 @api_router.get("/trash/list")
 async def list_trash_reports(
