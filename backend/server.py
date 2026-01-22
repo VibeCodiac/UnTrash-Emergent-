@@ -965,7 +965,25 @@ async def delete_trash_report(request: Request, report_id: str):
             }}
         )
     
-    # No points deducted for reporter since reporting doesn't give points anymore
+    # Deduct reporter points (5 points for reporting)
+    if report.get("reporter_id"):
+        reporter_id = report["reporter_id"]
+        reporter_points = 5  # Points given for reporting
+        await safe_deduct_points(reporter_id, reporter_points)
+        points_deducted.append(f"Reporter {reporter_id}: -{reporter_points} points")
+        
+        # Also deduct from reporter's groups
+        reporter_doc = await db.users.find_one({"user_id": reporter_id}, {"_id": 0, "joined_groups": 1})
+        if reporter_doc and reporter_doc.get("joined_groups"):
+            for group_id in reporter_doc["joined_groups"]:
+                group_doc = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+                if group_doc:
+                    new_group_total = max(0, group_doc.get("total_points", 0) - reporter_points)
+                    new_group_weekly = max(0, group_doc.get("weekly_points", 0) - reporter_points)
+                    await db.groups.update_one(
+                        {"group_id": group_id},
+                        {"$set": {"total_points": new_group_total, "weekly_points": new_group_weekly}}
+                    )
     
     # Deduct collector points if collection was verified and points were given
     if report.get("collector_id") and report.get("points_given", False):
