@@ -705,28 +705,15 @@ function ReportTrashModal({ onClose, onSubmit, loading, getCurrentLocation, user
               </button>
             )}
           </div>
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
-              data-testid="report-lng-input"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Address (optional)"
-              value={location.address}
-              onChange={(e) => setLocation({ ...location, address: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              data-testid="report-address-input"
-            />
-            <p className="text-xs text-gray-500 mt-1">💡 Tip: Right-click on the map to get coordinates</p>
-          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Photo of Trash</label>
             <input
               type="file"
               accept="image/*"
+              capture="environment"
               onChange={handleImageChange}
-              className="w-full"
+              className="w-full text-sm"
               data-testid="report-image-input"
               required
             />
@@ -738,7 +725,7 @@ function ReportTrashModal({ onClose, onSubmit, loading, getCurrentLocation, user
           <div className="flex space-x-3">
             <button
               type="submit"
-              disabled={uploading || loading}
+              disabled={uploading || loading || locationStatus !== 'found'}
               className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 flex items-center justify-center"
               data-testid="submit-report-button"
             >
