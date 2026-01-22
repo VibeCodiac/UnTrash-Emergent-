@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
-import { MapPin, X, Upload, Loader, CheckCircle, AlertCircle, Layers, Trash2, Sparkles } from 'lucide-react';
+import { MapPin, X, Upload, Loader, CheckCircle, AlertCircle, Layers, Trash2, Sparkles, Share2 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet.heat';
 import axios from 'axios';
