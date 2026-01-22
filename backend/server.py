@@ -481,9 +481,27 @@ async def list_trash_reports(
     limit: int = 100
 ):
     """Get list of trash reports"""
+    from datetime import timedelta
+    
+    # Calculate date 7 days ago
+    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    
+    # Build query
     query = {}
+    
     if status:
         query["status"] = status
+    else:
+        # Default: Show all reported trash + collected trash from last 7 days
+        query = {
+            "$or": [
+                {"status": "reported"},  # Show all reported trash
+                {
+                    "status": "collected",
+                    "collected_at": {"$gte": week_ago}  # Only show collected trash from last week
+                }
+            ]
+        }
     
     reports = await db.trash_reports.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
     return reports
