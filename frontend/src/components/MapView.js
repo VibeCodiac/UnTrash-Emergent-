@@ -563,11 +563,30 @@ function ShareSuccessModal({ points, onClose }) {
   );
 }
 
-function ReportTrashModal({ onClose, onSubmit, loading }) {
-  const [location, setLocation] = useState({ lat: 52.520008, lng: 13.404954, address: '' });
+function ReportTrashModal({ onClose, onSubmit, loading, getCurrentLocation, userLocation, locationError, gettingLocation }) {
+  const [location, setLocation] = useState(userLocation || { lat: 52.520008, lng: 13.404954, address: '' });
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [locationStatus, setLocationStatus] = useState(userLocation ? 'found' : 'pending');
+
+  // Auto-get location when modal opens
+  useEffect(() => {
+    if (!userLocation) {
+      handleGetLocation();
+    }
+  }, []);
+
+  const handleGetLocation = async () => {
+    setLocationStatus('getting');
+    try {
+      const loc = await getCurrentLocation();
+      setLocation({ lat: loc.lat, lng: loc.lng, address: '', accuracy: loc.accuracy });
+      setLocationStatus('found');
+    } catch (error) {
+      setLocationStatus('error');
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -602,6 +621,10 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
       alert('Please select an image');
       return;
     }
+    if (locationStatus !== 'found') {
+      alert('Please get your location first');
+      return;
+    }
 
     setUploading(true);
     try {
@@ -623,31 +646,65 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="report-trash-modal">
       <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Report Trash</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Report Trash</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X className="w-6 h-6" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Location Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-            <input
-              type="number"
-              step="any"
-              placeholder="Latitude (e.g., 52.520008)"
-              value={location.lat}
-              onChange={(e) => setLocation({ ...location, lat: parseFloat(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
-              data-testid="report-lat-input"
-              required
-            />
-            <input
-              type="number"
-              step="any"
-              placeholder="Longitude (e.g., 13.404954)"
-              value={location.lng}
-              onChange={(e) => setLocation({ ...location, lng: parseFloat(e.target.value) })}
+            <label className="block text-sm font-medium text-gray-700 mb-2">Your Location</label>
+            
+            {locationStatus === 'getting' && (
+              <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded-lg text-blue-700">
+                <Loader className="w-5 h-5 animate-spin" />
+                <span className="text-sm">Getting your location...</span>
+              </div>
+            )}
+            
+            {locationStatus === 'found' && (
+              <div className="p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center space-x-2 text-green-700 mb-1">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="text-sm font-medium">Location found!</span>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Coordinates: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+                  {location.accuracy && ` (±${Math.round(location.accuracy)}m)`}
+                </p>
+              </div>
+            )}
+            
+            {locationStatus === 'error' && (
+              <div className="p-3 bg-red-50 rounded-lg">
+                <div className="flex items-center space-x-2 text-red-700 mb-2">
+                  <AlertCircle className="w-5 h-5" />
+                  <span className="text-sm font-medium">Location Error</span>
+                </div>
+                <p className="text-xs text-red-600 mb-2">{locationError}</p>
+                <button
+                  type="button"
+                  onClick={handleGetLocation}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
+            
+            {locationStatus === 'pending' && (
+              <button
+                type="button"
+                onClick={handleGetLocation}
+                className="w-full flex items-center justify-center space-x-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <MapPin className="w-5 h-5" />
+                <span>Get My Location</span>
+              </button>
+            )}
+          </div>
               className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
               data-testid="report-lng-input"
               required
