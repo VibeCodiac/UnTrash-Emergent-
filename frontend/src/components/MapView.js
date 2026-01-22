@@ -499,8 +499,7 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
 
     setUploading(true);
     try {
-      // Use simple upload instead of Cloudinary
-      const imageUrl = await uploadImageSimple(image);
+      const imageUrl = await uploadToCloudinary(image);
       await onSubmit({
         location,
         image_url: imageUrl,
@@ -508,7 +507,7 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
       });
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload image: ' + error.message);
+      alert('Failed to upload image. Please try again.');
     } finally {
       setUploading(false);
     }
