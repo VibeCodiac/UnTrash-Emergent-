@@ -124,13 +124,17 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 
 ### Admin
 - `GET /api/admin/users` - List all users
-- `POST /api/admin/users/{user_id}/ban` - Ban user
+- `POST /api/admin/users/{user_id}/ban` - Ban user (deletes all sessions)
 - `POST /api/admin/users/{user_id}/unban` - Unban user
-- `DELETE /api/admin/trash/{report_id}` - Delete trash report
+- `DELETE /api/admin/trash/{report_id}` - Delete trash report (deducts points)
 - `PUT /api/admin/trash/{report_id}` - Update trash report
-- `GET /api/admin/areas/pending` - List pending cleanings
-- `POST /api/admin/areas/{area_id}/approve` - Approve cleaning
-- `DELETE /api/admin/areas/{area_id}` - Reject cleaning
+- `GET /api/admin/areas/pending` - List pending area cleanings
+- `POST /api/admin/areas/{area_id}/approve` - Approve area cleaning
+- `DELETE /api/admin/areas/{area_id}` - Reject area cleaning
+- `GET /api/admin/collections/pending` - List pending trash collections
+- `POST /api/admin/collections/{report_id}/approve` - Approve collection
+- `DELETE /api/admin/collections/{report_id}` - Reject collection (reverts to reported)
+- `GET /api/admin/pending-count` - Get counts of all pending verifications
 
 ### Other
 - `GET /api/events/upcoming` - User's upcoming group events
