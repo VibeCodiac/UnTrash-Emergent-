@@ -161,43 +161,20 @@ function Profile({ user }) {
             <p className="text-xs text-gray-500 mt-1 md:mt-2 text-center hidden md:block">Achievements</p>
           </div>
         </div>
-            </div>
-            <p className="text-4xl font-bold text-gray-900" data-testid="profile-total-points">{user?.total_points || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">All-time points earned</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">Monthly Points</h3>
-              <Trophy className="w-8 h-8 text-green-500" />
-            </div>
-            <p className="text-4xl font-bold text-gray-900" data-testid="profile-monthly-points">{user?.monthly_points || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">This month</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">Total Medals</h3>
-              <Award className="w-8 h-8 text-purple-500" />
-            </div>
-            <p className="text-4xl font-bold text-gray-900" data-testid="profile-medal-count">{allMedals.length}</p>
-            <p className="text-sm text-gray-500 mt-2">Achievements earned</p>
-          </div>
-        </div>
 
         {/* Medal Collection */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            <Award className="w-8 h-8 mr-3 text-yellow-500" />
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-8 mb-4 md:mb-6">
+          <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 flex items-center">
+            <Award className="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3 text-yellow-500" />
             My Medal Collection
           </h2>
 
           {allMedals.length === 0 ? (
-            <div className="text-center py-12">
-              <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 mb-2">No medals earned yet</p>
-              <p className="text-sm text-gray-400 mb-6">Collect trash to earn monthly medals!</p>
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 max-w-md mx-auto">
+            <div className="text-center py-8 md:py-12">
+              <Trophy className="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 mb-2 text-sm md:text-base">No medals earned yet</p>
+              <p className="text-xs md:text-sm text-gray-400 mb-4 md:mb-6">Collect trash to earn monthly medals!</p>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 md:p-6 max-w-md mx-auto">
                 <h3 className="font-semibold text-gray-900 mb-3">Medal Requirements (Monthly)</h3>
                 <div className="space-y-2 text-left">
                   <MedalRequirementRow medal="bronze" points={MEDAL_THRESHOLDS.bronze} />
