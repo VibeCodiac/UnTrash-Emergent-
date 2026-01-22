@@ -208,7 +208,7 @@ function MapView({ user }) {
       await axios.post(`${API}/trash/report`, data, {
         withCredentials: true
       });
-      setMessage({ type: 'success', text: 'Trash reported successfully! +10 points' });
+      setMessage({ type: 'success', text: 'Trash reported successfully! It will appear on the map for others to collect.' });
       setShowReportModal(false);
       loadTrashReports();
       loadHeatMapData();
