@@ -901,6 +901,67 @@ async def list_all_users(request: Request, limit: int = 50):
     users = await db.users.find({}, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
     return users
 
+@api_router.get("/admin/areas/pending")
+async def list_pending_areas(request: Request):
+    """List area cleanings pending approval (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    areas = await db.area_cleanings.find(
+        {"admin_approved": False},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Add user info
+    for area in areas:
+        user_doc = await db.users.find_one({"user_id": area["user_id"]}, {"_id": 0, "name": 1, "email": 1})
+        if user_doc:
+            area["user_name"] = user_doc.get("name")
+            area["user_email"] = user_doc.get("email")
+    
+    return areas
+
+@api_router.post("/admin/areas/{area_id}/approve")
+async def approve_area_cleaning(request: Request, area_id: str):
+    """Approve area cleaning and award points (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    area = await db.area_cleanings.find_one({"area_id": area_id}, {"_id": 0})
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+    
+    if area.get("admin_approved"):
+        raise HTTPException(status_code=400, detail="Area already approved")
+    
+    # Approve and award points
+    await db.area_cleanings.update_one(
+        {"area_id": area_id},
+        {"$set": {"admin_approved": True, "ai_verified": True}}
+    )
+    
+    # Award points to user
+    await update_user_points(area["user_id"], area["points_awarded"])
+    
+    return {"message": "Area approved and points awarded", "points": area["points_awarded"]}
+
+@api_router.delete("/admin/areas/{area_id}")
+async def reject_area_cleaning(request: Request, area_id: str):
+    """Reject/delete area cleaning (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    area = await db.area_cleanings.find_one({"area_id": area_id}, {"_id": 0})
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+    
+    await db.area_cleanings.delete_one({"area_id": area_id})
+    
+    return {"message": "Area cleaning rejected and deleted"}
+
 # ==================== STATS ENDPOINTS ====================
 
 @api_router.get("/stats/weekly")
