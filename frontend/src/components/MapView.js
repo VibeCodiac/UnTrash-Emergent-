@@ -6,7 +6,6 @@ import L from 'leaflet';
 import 'leaflet.heat';
 import axios from 'axios';
 import 'leaflet/dist/leaflet.css';
-import { uploadImageSimple, getImageDataUrl } from '../utils/imageUpload';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
