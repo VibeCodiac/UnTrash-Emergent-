@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, Calendar, MapPin, ArrowLeft } from 'lucide-react';
+import { Users, Plus, Calendar, MapPin, ArrowLeft, X } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
