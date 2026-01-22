@@ -368,6 +368,84 @@ function MapView({ user }) {
           loading={loading}
         />
       )}
+
+      {/* Share Success Modal */}
+      {showShareModal && (
+        <ShareSuccessModal
+          points={lastCollectionPoints}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ShareSuccessModal({ points, onClose }) {
+  const [shareStatus, setShareStatus] = useState(null);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'UnTrash Berlin - I Made a Difference!',
+      text: `🌱 I just collected trash in Berlin and earned ${points} points on UnTrash Berlin! Join me in making our city cleaner! 🗑️♻️`,
+      url: window.location.origin
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareStatus('shared');
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+        setShareStatus('copied');
+      }
+      setTimeout(() => {
+        setShareStatus(null);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="share-success-modal">
+      <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 text-center">
+        <div className="text-6xl mb-4">🎉</div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Awesome!</h2>
+        <p className="text-lg text-gray-700 mb-4">You earned <span className="font-bold text-green-600">+{points} points</span></p>
+        <p className="text-gray-600 mb-6">Share your achievement with friends!</p>
+        
+        <div className="space-y-3">
+          <button
+            onClick={handleShare}
+            className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center space-x-2"
+            data-testid="share-achievement-button"
+          >
+            {shareStatus === 'shared' ? (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                <span>Shared!</span>
+              </>
+            ) : shareStatus === 'copied' ? (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                <span>Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-5 h-5" />
+                <span>Share My Achievement</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Continue
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
