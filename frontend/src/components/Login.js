@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Sparkles, Trophy, Camera, CheckCircle, Users } from 'lucide-react';
+import { MapPin, Sparkles, Trophy, Users, Camera } from 'lucide-react';
 
 function Login() {
   const handleGoogleLogin = () => {
@@ -38,7 +38,7 @@ function Login() {
                 <div>
                   <div className="text-xs text-red-600 font-semibold mb-1">STEP 1</div>
                   <h3 className="font-semibold text-gray-900 text-sm md:text-base">Spot & Report</h3>
-                  <p className="text-xs md:text-sm text-gray-600">See trash? Take a photo and mark the location on the map. Earn 5 points.</p>
+                  <p className="text-xs md:text-sm text-gray-600">See trash? Take a photo and your location is automatically detected.</p>
                 </div>
               </div>
 
@@ -55,7 +55,7 @@ function Login() {
                 <div>
                   <div className="text-xs text-green-600 font-semibold mb-1">STEP 2</div>
                   <h3 className="font-semibold text-gray-900 text-sm md:text-base">Clean & Verify</h3>
-                  <p className="text-xs md:text-sm text-gray-600">Collect the trash and upload a photo of the clean spot. Earn 15-25 points.</p>
+                  <p className="text-xs md:text-sm text-gray-600">Collect the trash and upload a photo. AI verifies your cleanup.</p>
                 </div>
               </div>
 
@@ -71,8 +71,8 @@ function Login() {
                 </div>
                 <div>
                   <div className="text-xs text-purple-600 font-semibold mb-1">STEP 3</div>
-                  <h3 className="font-semibold text-gray-900 text-sm md:text-base">Earn Medals</h3>
-                  <p className="text-xs md:text-sm text-gray-600">Collect points monthly to earn Bronze, Silver, Gold, Platinum, or Diamond medals!</p>
+                  <h3 className="font-semibold text-gray-900 text-sm md:text-base">Earn Rewards</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Collect points and earn monthly medals from Bronze to Diamond!</p>
                 </div>
               </div>
 
@@ -89,35 +89,8 @@ function Login() {
                 <div>
                   <div className="text-xs text-blue-600 font-semibold mb-1">STEP 4</div>
                   <h3 className="font-semibold text-gray-900 text-sm md:text-base">Join Groups</h3>
-                  <p className="text-xs md:text-sm text-gray-600">Team up with others for cleanup events and compete on the leaderboard!</p>
+                  <p className="text-xs md:text-sm text-gray-600">Team up with others for cleanup events and compete together!</p>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Medal Tiers */}
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl shadow-lg p-6 md:p-8 mb-6 md:mb-8">
-            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4 text-center">Monthly Medal Tiers</h3>
-            <div className="flex flex-wrap justify-center gap-3 md:gap-6">
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl">🥉</span>
-                <span className="text-sm font-medium text-gray-700">Bronze: 30 pts</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl">🥈</span>
-                <span className="text-sm font-medium text-gray-700">Silver: 75 pts</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl">🥇</span>
-                <span className="text-sm font-medium text-gray-700">Gold: 150 pts</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl">⭐</span>
-                <span className="text-sm font-medium text-gray-700">Platinum: 300 pts</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl">💎</span>
-                <span className="text-sm font-medium text-gray-700">Diamond: 500 pts</span>
               </div>
             </div>
           </div>
