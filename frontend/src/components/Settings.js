@@ -261,7 +261,7 @@ function Settings({ user }) {
             <div className="text-center py-8 text-gray-500">
               <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
               <p>No notifications yet</p>
-              <p className="text-sm mt-1">When someone creates an event in your groups, you'll see it here!</p>
+              <p className="text-sm mt-1">When someone creates an event in your groups, you&apos;ll see it here!</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
