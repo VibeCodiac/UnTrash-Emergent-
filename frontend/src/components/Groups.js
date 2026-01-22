@@ -100,32 +100,32 @@ function Groups({ user }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="mb-4 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
+          <div className="flex items-center space-x-3 md:space-x-4">
             <button
               onClick={() => navigate('/')}
               className="text-gray-600 hover:text-gray-800"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">Cleanup Groups</h1>
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">Cleanup Groups</h1>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+            className="bg-green-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 text-sm md:text-base w-full sm:w-auto justify-center"
             data-testid="create-group-button"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 md:w-5 md:h-5" />
             <span>Create Group</span>
           </button>
         </div>
 
         {/* My Groups */}
         {myGroups.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">My Groups</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mb-4 md:mb-8">
+            <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">My Groups</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {myGroups.map((group) => (
                 <GroupCard
                   key={group.group_id}
@@ -144,8 +144,8 @@ function Groups({ user }) {
 
         {/* All Groups */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">All Groups</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">All Groups</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
             {groups.filter(g => !(user?.joined_groups || []).includes(g.group_id)).map((group) => (
               <GroupCard
                 key={group.group_id}
