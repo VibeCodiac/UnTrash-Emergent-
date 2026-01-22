@@ -216,6 +216,51 @@ function Dashboard({ user }) {
           </div>
         </div>
 
+        {/* User Medals Section - Only show if user has medals */}
+        {user?.medals && Object.keys(user.medals).length > 0 && (
+          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl shadow-lg p-4 md:p-6 mb-4 md:mb-6" data-testid="medals-section">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base md:text-lg font-bold text-gray-900 flex items-center">
+                <Award className="w-5 h-5 md:w-6 md:h-6 mr-2 text-yellow-600" />
+                My Medals
+              </h2>
+              <button
+                onClick={() => navigate('/profile')}
+                className="text-sm text-yellow-700 hover:text-yellow-800 font-medium"
+              >
+                View All →
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+              {Object.entries(user.medals).flatMap(([month, medalList]) =>
+                medalList.map((medal, idx) => (
+                  <div
+                    key={`${month}-${medal}-${idx}`}
+                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-sm font-medium ${
+                      medal === 'diamond' ? 'bg-gradient-to-r from-cyan-400 to-indigo-400 text-white' :
+                      medal === 'platinum' ? 'bg-gradient-to-r from-slate-300 to-blue-200 text-gray-800' :
+                      medal === 'gold' ? 'bg-gradient-to-r from-yellow-400 to-amber-400 text-gray-800' :
+                      medal === 'silver' ? 'bg-gradient-to-r from-gray-300 to-slate-300 text-gray-800' :
+                      'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                    }`}
+                    data-testid="medal-badge"
+                  >
+                    <span>
+                      {medal === 'diamond' && '💎'}
+                      {medal === 'platinum' && '⭐'}
+                      {medal === 'gold' && '🥇'}
+                      {medal === 'silver' && '🥈'}
+                      {medal === 'bronze' && '🥉'}
+                    </span>
+                    <span className="capitalize">{medal}</span>
+                    <span className="text-xs opacity-75">({month})</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-6">
           <div className="bg-white rounded-xl shadow-lg p-4 md:p-6" data-testid="weekly-reports-card">
