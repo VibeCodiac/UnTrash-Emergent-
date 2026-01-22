@@ -305,35 +305,36 @@ class TestMedalThresholds:
     """Test updated medal thresholds"""
     
     def test_medal_thresholds_in_code(self, admin_client):
-        """Verify medal thresholds are: Bronze 30, Silver 75, Gold 150, Platinum 300, Diamond 500"""
-        # We can verify this by checking the calculate_medal_for_points function behavior
-        # by setting monthly points and checking medal assignment
+        """Verify medal thresholds are: Bronze 30, Silver 75, Gold 150, Platinum 300, Diamond 500
         
+        Note: Reporting trash awards 5 points, so we test with points that after +5 will cross thresholds
+        """
         # Get original user data
         user_response = admin_client.get(f"{BASE_URL}/api/auth/me")
         original_user = user_response.json()
         
-        # Test Bronze threshold (30 points)
+        # Test cases: (starting_points, expected_medal_after_report, description)
+        # Report awards 5 points, so final points = starting + 5
         test_cases = [
-            (29, None, "29 points should not earn bronze"),
-            (30, "bronze", "30 points should earn bronze"),
-            (74, "bronze", "74 points should still be bronze"),
-            (75, "silver", "75 points should earn silver"),
-            (149, "silver", "149 points should still be silver"),
-            (150, "gold", "150 points should earn gold"),
-            (299, "gold", "299 points should still be gold"),
-            (300, "platinum", "300 points should earn platinum"),
-            (499, "platinum", "499 points should still be platinum"),
-            (500, "diamond", "500 points should earn diamond"),
+            (24, None, "24+5=29 points should not earn bronze"),  # 29 < 30
+            (25, "bronze", "25+5=30 points should earn bronze"),  # 30 >= 30
+            (69, "bronze", "69+5=74 points should still be bronze"),  # 74 < 75
+            (70, "silver", "70+5=75 points should earn silver"),  # 75 >= 75
+            (144, "silver", "144+5=149 points should still be silver"),  # 149 < 150
+            (145, "gold", "145+5=150 points should earn gold"),  # 150 >= 150
+            (294, "gold", "294+5=299 points should still be gold"),  # 299 < 300
+            (295, "platinum", "295+5=300 points should earn platinum"),  # 300 >= 300
+            (494, "platinum", "494+5=499 points should still be platinum"),  # 499 < 500
+            (495, "diamond", "495+5=500 points should earn diamond"),  # 500 >= 500
         ]
         
-        print("Medal threshold verification:")
-        for points, expected_medal, description in test_cases:
-            # Set monthly points
+        print("Medal threshold verification (report awards 5 points):")
+        for starting_points, expected_medal, description in test_cases:
+            # Set monthly points and clear medals
             reset_data = {
-                "total_points": points,
-                "monthly_points": points,
-                "weekly_points": points,
+                "total_points": starting_points,
+                "monthly_points": starting_points,
+                "weekly_points": starting_points,
                 "clear_medals": True
             }
             admin_client.post(
@@ -341,7 +342,7 @@ class TestMedalThresholds:
                 json=reset_data
             )
             
-            # Award 1 point to trigger medal calculation
+            # Report trash to trigger medal calculation (+5 points)
             report_data = {
                 "location": {"lat": 52.5200, "lng": 13.4050},
                 "image_url": "https://res.cloudinary.com/test/image/upload/medal_test.jpg"
@@ -360,7 +361,7 @@ class TestMedalThresholds:
                 print(f"  ✓ {description}")
             else:
                 # For 29 points, no medal should be earned
-                assert len(month_medals) == 0 or "bronze" not in month_medals, f"{description}: should not have bronze"
+                assert len(month_medals) == 0 or "bronze" not in month_medals, f"{description}: should not have bronze, got {month_medals}"
                 print(f"  ✓ {description}")
         
         # Restore original points
