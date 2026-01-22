@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Award } from 'lucide-react';
+import { ArrowLeft, Trophy, Award, Share2, Copy, CheckCircle } from 'lucide-react';
 
 function Profile({ user }) {
   const navigate = useNavigate();
+  const [shareStatus, setShareStatus] = useState(null);
 
   const getMedalIcon = (medal) => {
     switch (medal) {
@@ -44,17 +45,80 @@ function Profile({ user }) {
     medalList.map((medal) => ({ month, medal }))
   );
 
+  const shareProfile = async () => {
+    const shareData = {
+      title: 'UnTrash Berlin - My Impact',
+      text: `🌱 I've earned ${user?.total_points || 0} points cleaning up Berlin! Check out my ${allMedals.length} medals on UnTrash Berlin! Join me in making our city cleaner! 🗑️♻️`,
+      url: window.location.origin
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareStatus('shared');
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+        setShareStatus('copied');
+      }
+      setTimeout(() => setShareStatus(null), 3000);
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  const shareMedal = async (medal, month) => {
+    const medalEmoji = getMedalIcon(medal);
+    const shareData = {
+      title: `UnTrash Berlin - ${medal.charAt(0).toUpperCase() + medal.slice(1)} Medal`,
+      text: `${medalEmoji} I just earned a ${medal.toUpperCase()} medal for ${month} on UnTrash Berlin! Cleaning up Berlin one piece of trash at a time! Join me! 🌱`,
+      url: window.location.origin
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareStatus(`shared-${medal}-${month}`);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+        setShareStatus(`copied-${medal}-${month}`);
+      }
+      setTimeout(() => setShareStatus(null), 2000);
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center space-x-4">
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => navigate('/')}
+              className="text-gray-600 hover:text-gray-800"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+          </div>
           <button
-            onClick={() => navigate('/')}
-            className="text-gray-600 hover:text-gray-800"
+            onClick={shareProfile}
+            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            data-testid="share-profile-button"
           >
-            <ArrowLeft className="w-6 h-6" />
+            {shareStatus === 'shared' || shareStatus === 'copied' ? (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                <span>{shareStatus === 'shared' ? 'Shared!' : 'Copied!'}</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-5 h-5" />
+                <span>Share My Impact</span>
+              </>
+            )}
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
         </div>
 
         {/* User Info Card */}
@@ -99,32 +163,35 @@ function Profile({ user }) {
 
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">Weekly Points</h3>
-              <Trophy className="w-8 h-8 text-blue-500" />
+              <h3 className="text-lg font-semibold text-gray-700">Total Medals</h3>
+              <Award className="w-8 h-8 text-purple-500" />
             </div>
-            <p className="text-4xl font-bold text-gray-900" data-testid="profile-weekly-points">{user?.weekly_points || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">This week</p>
+            <p className="text-4xl font-bold text-gray-900" data-testid="profile-medal-count">{allMedals.length}</p>
+            <p className="text-sm text-gray-500 mt-2">Achievements earned</p>
           </div>
         </div>
 
-        {/* Medals Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        {/* Medals Gallery - Prominent Display */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
             <Award className="w-8 h-8 mr-3 text-yellow-500" />
-            My Medals
+            My Medal Collection
           </h2>
 
           {allMedals.length === 0 ? (
             <div className="text-center py-12">
               <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 mb-2">No medals earned yet</p>
-              <p className="text-sm text-gray-400">Collect trash to earn monthly medals!</p>
-              <div className="mt-6 space-y-2 text-left max-w-md mx-auto">
-                <p className="text-sm text-gray-600">🥉 <strong>Bronze:</strong> 100 points</p>
-                <p className="text-sm text-gray-600">🥈 <strong>Silver:</strong> 300 points</p>
-                <p className="text-sm text-gray-600">🥇 <strong>Gold:</strong> 600 points</p>
-                <p className="text-sm text-gray-600">⭐ <strong>Platinum:</strong> 1,000 points</p>
-                <p className="text-sm text-gray-600">💎 <strong>Diamond:</strong> 2,000 points</p>
+              <p className="text-sm text-gray-400 mb-6">Collect trash to earn monthly medals!</p>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 max-w-md mx-auto">
+                <h3 className="font-semibold text-gray-900 mb-3">Medal Requirements</h3>
+                <div className="space-y-2 text-left">
+                  <p className="text-sm text-gray-600">🥉 <strong>Bronze:</strong> 100 points/month</p>
+                  <p className="text-sm text-gray-600">🥈 <strong>Silver:</strong> 300 points/month</p>
+                  <p className="text-sm text-gray-600">🥇 <strong>Gold:</strong> 600 points/month</p>
+                  <p className="text-sm text-gray-600">⭐ <strong>Platinum:</strong> 1,000 points/month</p>
+                  <p className="text-sm text-gray-600">💎 <strong>Diamond:</strong> 2,000 points/month</p>
+                </div>
               </div>
             </div>
           ) : (
@@ -132,12 +199,29 @@ function Profile({ user }) {
               {allMedals.map(({ month, medal }, index) => (
                 <div
                   key={`${month}-${medal}-${index}`}
-                  className={`bg-gradient-to-br ${getMedalColor(medal)} p-6 rounded-xl shadow-lg text-center transform hover:scale-105 transition-transform`}
+                  className="relative group"
                   data-testid="medal-item"
                 >
-                  <div className="text-5xl mb-2">{getMedalIcon(medal)}</div>
-                  <p className="text-white font-bold capitalize">{medal}</p>
-                  <p className="text-white text-xs mt-1 opacity-90">{month}</p>
+                  <div
+                    className={`bg-gradient-to-br ${getMedalColor(medal)} p-6 rounded-xl shadow-lg text-center transform hover:scale-105 transition-all cursor-pointer`}
+                  >
+                    <div className="text-5xl mb-2">{getMedalIcon(medal)}</div>
+                    <p className="text-white font-bold capitalize">{medal}</p>
+                    <p className="text-white text-xs mt-1 opacity-90">{month}</p>
+                  </div>
+                  
+                  {/* Share button on hover */}
+                  <button
+                    onClick={() => shareMedal(medal, month)}
+                    className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Share this medal"
+                  >
+                    {shareStatus === `shared-${medal}-${month}` || shareStatus === `copied-${medal}-${month}` ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Share2 className="w-4 h-4 text-blue-600" />
+                    )}
+                  </button>
                 </div>
               ))}
             </div>
@@ -146,7 +230,7 @@ function Profile({ user }) {
 
         {/* Progress to Next Medal */}
         {user?.monthly_points !== undefined && (
-          <div className="bg-white rounded-xl shadow-lg p-8 mt-6">
+          <div className="bg-white rounded-xl shadow-lg p-8">
             <h3 className="text-xl font-bold text-gray-900 mb-4">This Month's Progress</h3>
             <div className="space-y-4">
               {[
