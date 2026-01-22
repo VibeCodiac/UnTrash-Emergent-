@@ -126,11 +126,16 @@ function Dashboard({ user }) {
               {user?.is_admin && (
                 <button
                   onClick={() => navigate('/admin')}
-                  className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
+                  className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors relative"
                   data-testid="nav-admin-button"
                 >
                   <Shield className="w-5 h-5" />
                   <span>Admin</span>
+                  {pendingCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse" data-testid="admin-pending-badge">
+                      {pendingCount}
+                    </span>
+                  )}
                 </button>
               )}
               <button
