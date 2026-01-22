@@ -1,49 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Award, Share2, Copy, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Trophy, Award, Share2, CheckCircle, Sparkles } from 'lucide-react';
+
+// Medal thresholds (updated to match backend)
+const MEDAL_THRESHOLDS = {
+  bronze: 30,
+  silver: 75,
+  gold: 150,
+  platinum: 300,
+  diamond: 500
+};
 
 function Profile({ user }) {
   const navigate = useNavigate();
   const [shareStatus, setShareStatus] = useState(null);
-
-  const getMedalIcon = (medal) => {
-    switch (medal) {
-      case 'diamond':
-        return '💎';
-      case 'platinum':
-        return '⭐';
-      case 'gold':
-        return '🥇';
-      case 'silver':
-        return '🥈';
-      case 'bronze':
-        return '🥉';
-      default:
-        return '🏆';
-    }
-  };
-
-  const getMedalColor = (medal) => {
-    switch (medal) {
-      case 'diamond':
-        return 'from-cyan-400 to-blue-600';
-      case 'platinum':
-        return 'from-gray-300 to-gray-500';
-      case 'gold':
-        return 'from-yellow-400 to-yellow-600';
-      case 'silver':
-        return 'from-gray-300 to-gray-400';
-      case 'bronze':
-        return 'from-orange-400 to-orange-600';
-      default:
-        return 'from-gray-200 to-gray-300';
-    }
-  };
+  const [newMedalAnimation, setNewMedalAnimation] = useState(null);
 
   const medals = user?.medals || {};
   const allMedals = Object.entries(medals).flatMap(([month, medalList]) =>
     medalList.map((medal) => ({ month, medal }))
   );
+
+  // Check for new medal achievement
+  useEffect(() => {
+    if (user?.monthly_points) {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const monthMedals = medals[currentMonth] || [];
+      
+      // Check if user just earned a medal
+      Object.entries(MEDAL_THRESHOLDS).forEach(([medal, threshold]) => {
+        if (user.monthly_points >= threshold && !monthMedals.includes(medal)) {
+          // Show animation for newly achievable medal
+          setNewMedalAnimation(medal);
+          setTimeout(() => setNewMedalAnimation(null), 3000);
+        }
+      });
+    }
+  }, [user?.monthly_points, medals]);
 
   const shareProfile = async () => {
     const shareData = {
@@ -57,7 +50,6 @@ function Profile({ user }) {
         await navigator.share(shareData);
         setShareStatus('shared');
       } else {
-        // Fallback: copy to clipboard
         await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
         setShareStatus('copied');
       }
@@ -68,10 +60,9 @@ function Profile({ user }) {
   };
 
   const shareMedal = async (medal, month) => {
-    const medalEmoji = getMedalIcon(medal);
     const shareData = {
       title: `UnTrash Berlin - ${medal.charAt(0).toUpperCase() + medal.slice(1)} Medal`,
-      text: `${medalEmoji} I just earned a ${medal.toUpperCase()} medal for ${month} on UnTrash Berlin! Cleaning up Berlin one piece of trash at a time! Join me! 🌱`,
+      text: `✨ I just earned a ${medal.toUpperCase()} medal for ${month} on UnTrash Berlin! Cleaning up Berlin one piece of trash at a time! Join me! 🌱`,
       url: window.location.origin
     };
 
@@ -171,7 +162,7 @@ function Profile({ user }) {
           </div>
         </div>
 
-        {/* Medals Gallery - Prominent Display */}
+        {/* Medal Collection */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
             <Award className="w-8 h-8 mr-3 text-yellow-500" />
@@ -184,45 +175,27 @@ function Profile({ user }) {
               <p className="text-gray-500 mb-2">No medals earned yet</p>
               <p className="text-sm text-gray-400 mb-6">Collect trash to earn monthly medals!</p>
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 max-w-md mx-auto">
-                <h3 className="font-semibold text-gray-900 mb-3">Medal Requirements</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Medal Requirements (Monthly)</h3>
                 <div className="space-y-2 text-left">
-                  <p className="text-sm text-gray-600">🥉 <strong>Bronze:</strong> 100 points/month</p>
-                  <p className="text-sm text-gray-600">🥈 <strong>Silver:</strong> 300 points/month</p>
-                  <p className="text-sm text-gray-600">🥇 <strong>Gold:</strong> 600 points/month</p>
-                  <p className="text-sm text-gray-600">⭐ <strong>Platinum:</strong> 1,000 points/month</p>
-                  <p className="text-sm text-gray-600">💎 <strong>Diamond:</strong> 2,000 points/month</p>
+                  <MedalRequirementRow medal="bronze" points={MEDAL_THRESHOLDS.bronze} />
+                  <MedalRequirementRow medal="silver" points={MEDAL_THRESHOLDS.silver} />
+                  <MedalRequirementRow medal="gold" points={MEDAL_THRESHOLDS.gold} />
+                  <MedalRequirementRow medal="platinum" points={MEDAL_THRESHOLDS.platinum} />
+                  <MedalRequirementRow medal="diamond" points={MEDAL_THRESHOLDS.diamond} />
                 </div>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4" data-testid="medals-container">
               {allMedals.map(({ month, medal }, index) => (
-                <div
+                <MedalCard
                   key={`${month}-${medal}-${index}`}
-                  className="relative group"
-                  data-testid="medal-item"
-                >
-                  <div
-                    className={`bg-gradient-to-br ${getMedalColor(medal)} p-6 rounded-xl shadow-lg text-center transform hover:scale-105 transition-all cursor-pointer`}
-                  >
-                    <div className="text-5xl mb-2">{getMedalIcon(medal)}</div>
-                    <p className="text-white font-bold capitalize">{medal}</p>
-                    <p className="text-white text-xs mt-1 opacity-90">{month}</p>
-                  </div>
-                  
-                  {/* Share button on hover */}
-                  <button
-                    onClick={() => shareMedal(medal, month)}
-                    className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Share this medal"
-                  >
-                    {shareStatus === `shared-${medal}-${month}` || shareStatus === `copied-${medal}-${month}` ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <Share2 className="w-4 h-4 text-blue-600" />
-                    )}
-                  </button>
-                </div>
+                  medal={medal}
+                  month={month}
+                  onShare={shareMedal}
+                  shareStatus={shareStatus}
+                  isNew={newMedalAnimation === medal}
+                />
               ))}
             </div>
           )}
@@ -233,29 +206,25 @@ function Profile({ user }) {
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h3 className="text-xl font-bold text-gray-900 mb-4">This Month's Progress</h3>
             <div className="space-y-4">
-              {[
-                { name: 'Bronze', points: 100, icon: '🥉' },
-                { name: 'Silver', points: 300, icon: '🥈' },
-                { name: 'Gold', points: 600, icon: '🥇' },
-                { name: 'Platinum', points: 1000, icon: '⭐' },
-                { name: 'Diamond', points: 2000, icon: '💎' },
-              ].map((medal) => {
-                const progress = Math.min(100, (user.monthly_points / medal.points) * 100);
-                const achieved = user.monthly_points >= medal.points;
+              {Object.entries(MEDAL_THRESHOLDS).map(([name, points]) => {
+                const progress = Math.min(100, (user.monthly_points / points) * 100);
+                const achieved = user.monthly_points >= points;
                 return (
-                  <div key={medal.name}>
+                  <div key={name}>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        {medal.icon} {medal.name}
+                      <span className="text-sm font-medium text-gray-700 flex items-center">
+                        <MedalIcon medal={name} size="small" />
+                        <span className="ml-2 capitalize">{name}</span>
+                        {achieved && <Sparkles className="w-4 h-4 ml-1 text-yellow-500" />}
                       </span>
                       <span className="text-sm text-gray-600">
-                        {user.monthly_points}/{medal.points} points
+                        {user.monthly_points}/{points} points
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                       <div
-                        className={`h-3 rounded-full transition-all ${
-                          achieved ? 'bg-green-600' : 'bg-blue-600'
+                        className={`h-3 rounded-full transition-all duration-500 ${
+                          achieved ? 'bg-gradient-to-r from-green-400 to-green-600' : 'bg-gradient-to-r from-blue-400 to-blue-600'
                         }`}
                         style={{ width: `${progress}%` }}
                       ></div>
@@ -267,6 +236,163 @@ function Profile({ user }) {
           </div>
         )}
       </div>
+
+      {/* New Medal Animation Overlay */}
+      {newMedalAnimation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+          <div className="text-center animate-bounceIn">
+            <div className="relative">
+              <MedalIcon medal={newMedalAnimation} size="xlarge" animated />
+              <div className="absolute inset-0 animate-ping opacity-30">
+                <MedalIcon medal={newMedalAnimation} size="xlarge" />
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold text-white mt-6 animate-slideUp">
+              {newMedalAnimation.toUpperCase()} Medal Earned!
+            </h2>
+            <p className="text-white text-lg mt-2 opacity-80">Congratulations!</p>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes bounceIn {
+          0% { transform: scale(0.3); opacity: 0; }
+          50% { transform: scale(1.1); }
+          70% { transform: scale(0.9); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+          50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
+        }
+        @keyframes rotate3d {
+          0% { transform: perspective(500px) rotateY(0deg); }
+          100% { transform: perspective(500px) rotateY(360deg); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+        .animate-bounceIn { animation: bounceIn 0.6s ease-out; }
+        .animate-slideUp { animation: slideUp 0.5s ease-out 0.3s both; }
+        .animate-shimmer { 
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+          background-size: 200% 100%;
+          animation: shimmer 2s infinite;
+        }
+        .animate-glow { animation: glow 2s ease-in-out infinite; }
+        .animate-rotate3d { animation: rotate3d 4s linear infinite; }
+      `}</style>
+    </div>
+  );
+}
+
+function MedalIcon({ medal, size = 'medium', animated = false }) {
+  const sizeClasses = {
+    small: 'w-6 h-6',
+    medium: 'w-12 h-12',
+    large: 'w-16 h-16',
+    xlarge: 'w-32 h-32'
+  };
+
+  const gradients = {
+    bronze: 'from-amber-600 via-orange-400 to-amber-700',
+    silver: 'from-gray-300 via-white to-gray-400',
+    gold: 'from-yellow-400 via-yellow-300 to-yellow-600',
+    platinum: 'from-slate-300 via-blue-100 to-slate-400',
+    diamond: 'from-cyan-300 via-blue-200 to-indigo-400'
+  };
+
+  const glowColors = {
+    bronze: 'shadow-orange-400/50',
+    silver: 'shadow-gray-300/50',
+    gold: 'shadow-yellow-400/50',
+    platinum: 'shadow-blue-300/50',
+    diamond: 'shadow-cyan-400/50'
+  };
+
+  return (
+    <div className={`${sizeClasses[size]} relative ${animated ? 'animate-rotate3d' : ''}`}>
+      <div className={`w-full h-full rounded-full bg-gradient-to-br ${gradients[medal]} shadow-lg ${glowColors[medal]} ${animated ? 'animate-glow' : ''} flex items-center justify-center border-2 border-white/30`}>
+        <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/20 to-white/40"></div>
+        <span className={`relative z-10 ${size === 'xlarge' ? 'text-6xl' : size === 'large' ? 'text-4xl' : size === 'medium' ? 'text-2xl' : 'text-base'}`}>
+          {medal === 'bronze' && '🥉'}
+          {medal === 'silver' && '🥈'}
+          {medal === 'gold' && '🥇'}
+          {medal === 'platinum' && '⭐'}
+          {medal === 'diamond' && '💎'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function MedalCard({ medal, month, onShare, shareStatus, isNew }) {
+  const gradients = {
+    bronze: 'from-amber-500 to-orange-600',
+    silver: 'from-gray-400 to-slate-500',
+    gold: 'from-yellow-400 to-amber-500',
+    platinum: 'from-slate-400 to-blue-500',
+    diamond: 'from-cyan-400 to-indigo-500'
+  };
+
+  return (
+    <div
+      className={`relative group ${isNew ? 'animate-bounceIn' : ''}`}
+      data-testid="medal-item"
+    >
+      <div
+        className={`bg-gradient-to-br ${gradients[medal]} p-6 rounded-xl shadow-lg text-center transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 cursor-pointer ${isNew ? 'animate-glow' : ''}`}
+      >
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 rounded-xl overflow-hidden">
+          <div className="absolute inset-0 animate-shimmer opacity-30"></div>
+        </div>
+        
+        <div className="relative z-10">
+          <MedalIcon medal={medal} size="medium" />
+          <p className="text-white font-bold capitalize mt-3 text-shadow">{medal}</p>
+          <p className="text-white text-xs mt-1 opacity-80">{month}</p>
+        </div>
+        
+        {/* Sparkle effect on hover */}
+        <Sparkles className="absolute top-2 left-2 w-4 h-4 text-white/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Sparkles className="absolute bottom-2 right-2 w-4 h-4 text-white/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      
+      {/* Share button on hover */}
+      <button
+        onClick={() => onShare(medal, month)}
+        className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+        title="Share this medal"
+      >
+        {shareStatus === `shared-${medal}-${month}` || shareStatus === `copied-${medal}-${month}` ? (
+          <CheckCircle className="w-4 h-4 text-green-600" />
+        ) : (
+          <Share2 className="w-4 h-4 text-blue-600" />
+        )}
+      </button>
+    </div>
+  );
+}
+
+function MedalRequirementRow({ medal, points }) {
+  return (
+    <div className="flex items-center space-x-2">
+      <MedalIcon medal={medal} size="small" />
+      <span className="text-sm text-gray-600">
+        <strong className="capitalize">{medal}:</strong> {points} points/month
+      </span>
     </div>
   );
 }
