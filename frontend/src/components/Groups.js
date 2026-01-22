@@ -180,7 +180,7 @@ function Groups({ user }) {
   );
 }
 
-function GroupCard({ group, isMember, onJoin, onLeave, onViewDetails, loading }) {
+function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onViewDetails, loading }) {
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow" data-testid="group-card">
       <div className="flex items-center space-x-3 mb-4">
@@ -188,7 +188,12 @@ function GroupCard({ group, isMember, onJoin, onLeave, onViewDetails, loading })
           <Users className="w-6 h-6 text-purple-600" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-bold text-gray-900">{group.name}</h3>
+          <div className="flex items-center space-x-2">
+            <h3 className="text-lg font-bold text-gray-900">{group.name}</h3>
+            {isOwner && (
+              <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">Owner</span>
+            )}
+          </div>
           <p className="text-sm text-gray-600">{group.member_ids?.length || 0} members</p>
         </div>
       </div>
@@ -206,18 +211,31 @@ function GroupCard({ group, isMember, onJoin, onLeave, onViewDetails, loading })
         <button
           onClick={onViewDetails}
           className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+          data-testid="view-group-details-button"
         >
           View Details
         </button>
         {isMember ? (
-          <button
-            onClick={onLeave}
-            disabled={loading}
-            className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 text-sm"
-            data-testid="leave-group-button"
-          >
-            Leave Group
-          </button>
+          isOwner ? (
+            <button
+              onClick={onDelete}
+              disabled={loading}
+              className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 text-sm flex items-center justify-center space-x-2"
+              data-testid="delete-group-button"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete Group</span>
+            </button>
+          ) : (
+            <button
+              onClick={onLeave}
+              disabled={loading}
+              className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 text-sm"
+              data-testid="leave-group-button"
+            >
+              Leave Group
+            </button>
+          )
         ) : (
           <button
             onClick={onJoin}
