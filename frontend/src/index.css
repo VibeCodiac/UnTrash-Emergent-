@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet styles */
+@import 'leaflet/dist/leaflet.css';
+
 body {
     margin: 0;
     font-family:
