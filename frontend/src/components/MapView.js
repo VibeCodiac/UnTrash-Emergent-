@@ -293,7 +293,7 @@ function MapView({ user }) {
             >
               <Popup>
                 <div className="p-2">
-                  <ImageDisplay src={report.image_url} alt="Trash" className="w-40 h-40 object-cover rounded mb-2" />
+                  <img src={report.image_url} alt="Trash" className="w-40 h-40 object-cover rounded mb-2" />
                   <p className="text-sm font-semibold mb-1">
                     Status: <span className={report.status === 'collected' ? 'text-green-600' : 'text-red-600'}>
                       {report.status}
