@@ -207,6 +207,36 @@ function MapView({ user }) {
     }
   };
 
+  const handleDeleteCleanedArea = async (areaId) => {
+    if (!window.confirm('Are you sure you want to delete this cleaned area?')) return;
+    
+    try {
+      await axios.delete(`${API}/admin/areas/${areaId}`, {
+        withCredentials: true
+      });
+      setMessage({ type: 'success', text: 'Cleaned area deleted successfully' });
+      loadCleanedAreas();
+      loadHeatMapData();
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to delete area' });
+    }
+  };
+
+  const handleDeleteTrashReport = async (reportId) => {
+    if (!window.confirm('Are you sure you want to delete this trash report? Points will be deducted from the users.')) return;
+    
+    try {
+      await axios.delete(`${API}/admin/trash/${reportId}`, {
+        withCredentials: true
+      });
+      setMessage({ type: 'success', text: 'Trash report deleted successfully' });
+      loadTrashReports();
+      loadHeatMapData();
+    } catch (error) {
+      setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to delete report' });
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
