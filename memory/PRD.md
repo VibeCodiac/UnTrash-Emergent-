@@ -33,10 +33,26 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - Event deletion by creator, group admin, or app admin
 - Mock notifications for new events
 
-### Gamification
-- Points: Total, Monthly, Weekly
-- Medal tiers: Bronze (100), Silver (300), Gold (600), Platinum (1000), Diamond (2000)
+## Gamification
+
+### Point Values (Reduced)
+- **Report trash:** 5 points
+- **Collect trash (AI verified):** 25 points
+- **Collect trash (not verified):** 15 points
+- **Area cleaning:** 2 points per 100m² (minimum 10)
+
+### Medal Thresholds (Monthly)
+- **Bronze:** 30 points
+- **Silver:** 75 points
+- **Gold:** 150 points
+- **Platinum:** 300 points
+- **Diamond:** 500 points
+
+### Features
 - Weekly leaderboards for users and groups
+- Animated medal cards with shimmer and glow effects
+- Progress bars showing progress to next medal
+- Social sharing for medals and achievements
 
 ### Admin Panel (`/admin`)
 - View/ban/unban users
