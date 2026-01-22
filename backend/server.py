@@ -319,7 +319,41 @@ async def logout(request: Request, response: Response):
     response.delete_cookie("session_token", path="/")
     return {"message": "Logged out"}
 
-# ==================== IMAGE UPLOAD ENDPOINTS ====================
+# ==================== CLOUDINARY ENDPOINTS ====================
+
+@api_router.get("/cloudinary/signature")
+async def generate_cloudinary_signature(
+    request: Request,
+    resource_type: str = Query("image", enum=["image", "video"]),
+    folder: str = "untrash"
+):
+    """Generate signed upload parameters for Cloudinary"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    timestamp = int(time.time())
+    params = {
+        "timestamp": timestamp,
+        "folder": folder,
+        "resource_type": resource_type
+    }
+    
+    signature = cloudinary.utils.api_sign_request(
+        params,
+        os.environ.get("CLOUDINARY_API_SECRET")
+    )
+    
+    return {
+        "signature": signature,
+        "timestamp": timestamp,
+        "cloud_name": os.environ.get("CLOUDINARY_CLOUD_NAME"),
+        "api_key": os.environ.get("CLOUDINARY_API_KEY"),
+        "folder": folder,
+        "resource_type": resource_type
+    }
+
+# ==================== IMAGE UPLOAD ENDPOINTS (BACKUP) ====================
 
 @api_router.post("/images/upload")
 async def upload_image_base64(request: Request, data: dict):
