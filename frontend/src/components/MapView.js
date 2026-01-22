@@ -662,7 +662,7 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
 
     setUploading(true);
     try {
-      const imageUrl = await uploadToCloudinary(image);
+      const imageUrl = await uploadImageSimple(image);
       await onSubmit({
         center_location: centerLocation,
         polygon_coords: generatePolygon(centerLocation, areaSize),
@@ -670,7 +670,8 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
         image_url: imageUrl
       });
     } catch (error) {
-      alert('Failed to upload image');
+      console.error('Upload error:', error);
+      alert('Failed to upload image: ' + error.message);
     } finally {
       setUploading(false);
     }
