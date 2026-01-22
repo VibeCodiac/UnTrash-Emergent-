@@ -271,10 +271,21 @@ function GroupDetailsModal({ group, onClose, isMember }) {
   const [events, setEvents] = useState([]);
   const [members, setMembers] = useState([]);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
     loadGroupDetails();
+    loadCurrentUser();
   }, [group.group_id]);
+
+  const loadCurrentUser = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/me`, { withCredentials: true });
+      setCurrentUserId(response.data.user_id);
+    } catch (error) {
+      console.error('Error loading current user:', error);
+    }
+  };
 
   const loadGroupDetails = async () => {
     try {
@@ -300,6 +311,20 @@ function GroupDetailsModal({ group, onClose, isMember }) {
       alert('Failed to create event');
     }
   };
+
+  const handleDeleteEvent = async (eventId) => {
+    if (!window.confirm('Are you sure you want to delete this event?')) return;
+    try {
+      await axios.delete(`${API}/groups/${group.group_id}/events/${eventId}`, {
+        withCredentials: true
+      });
+      loadGroupDetails();
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to delete event');
+    }
+  };
+
+  const isAdmin = currentUserId && group.admin_ids && group.admin_ids.includes(currentUserId);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
