@@ -159,7 +159,15 @@ async def get_user_from_session(request: Request) -> Optional[User]:
     if not user_doc:
         return None
     
+    # Check if user is banned
+    if user_doc.get("is_banned", False):
+        return None
+    
     return User(**user_doc)
+
+async def check_admin(user: User) -> bool:
+    """Check if user is admin"""
+    return user.is_admin if user else False
 
 async def verify_trash_in_image(image_url: str) -> bool:
     """Use OpenAI Vision to verify trash in image"""
