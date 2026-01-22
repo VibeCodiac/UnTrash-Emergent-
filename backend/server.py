@@ -213,16 +213,17 @@ def calculate_medal_for_points(monthly_points: int) -> Optional[str]:
     return None
 
 async def update_user_points(user_id: str, points: int):
-    """Update user points and check for medals"""
+    """Update user points and check for medals. Points cannot go below 0."""
     user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     if not user_doc:
         return
     
-    new_total = user_doc.get("total_points", 0) + points
-    new_monthly = user_doc.get("monthly_points", 0) + points
-    new_weekly = user_doc.get("weekly_points", 0) + points
+    # Calculate new points, ensuring they don't go negative
+    new_total = max(0, user_doc.get("total_points", 0) + points)
+    new_monthly = max(0, user_doc.get("monthly_points", 0) + points)
+    new_weekly = max(0, user_doc.get("weekly_points", 0) + points)
     
-    # Check for medal achievement
+    # Check for medal achievement based on monthly points
     current_month = datetime.now(timezone.utc).strftime("%Y-%m")
     medals = user_doc.get("medals", {})
     new_medal = calculate_medal_for_points(new_monthly)
@@ -232,6 +233,21 @@ async def update_user_points(user_id: str, points: int):
             medals[current_month] = []
         if new_medal not in medals[current_month]:
             medals[current_month].append(new_medal)
+    
+    # Remove medals if points dropped below threshold (e.g., admin reset or point deduction)
+    if current_month in medals:
+        # Keep only medals that match current point level
+        valid_medals = []
+        medal_thresholds = [
+            ("bronze", 30), ("silver", 75), ("gold", 150), 
+            ("platinum", 300), ("diamond", 500)
+        ]
+        for medal, threshold in medal_thresholds:
+            if new_monthly >= threshold and medal in medals[current_month]:
+                valid_medals.append(medal)
+        medals[current_month] = valid_medals
+        if not medals[current_month]:
+            del medals[current_month]
     
     await db.users.update_one(
         {"user_id": user_id},
