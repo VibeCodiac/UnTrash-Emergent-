@@ -406,17 +406,19 @@ function AdminPanel({ user }) {
                         </p>
                       </div>
                     </div>
-                    {!u.is_admin && (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => setResetPointsModal(u)}
-                          className="flex items-center space-x-1 bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700"
-                          data-testid={`reset-points-${u.user_id}`}
-                        >
-                          <RotateCcw className="w-4 h-4" />
-                          <span>Reset Points</span>
-                        </button>
-                        {u.is_banned ? (
+                    <div className="flex space-x-2">
+                      {/* Reset Points available for ALL users including admins */}
+                      <button
+                        onClick={() => setResetPointsModal(u)}
+                        className="flex items-center space-x-1 bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700"
+                        data-testid={`reset-points-${u.user_id}`}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>Reset Points</span>
+                      </button>
+                      {/* Ban/Unban only for non-admin users */}
+                      {!u.is_admin && (
+                        u.is_banned ? (
                           <button
                             onClick={() => handleUnbanUser(u.user_id)}
                             className="flex items-center space-x-1 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
@@ -434,9 +436,9 @@ function AdminPanel({ user }) {
                             <Ban className="w-4 h-4" />
                             <span>Ban</span>
                           </button>
-                        )}
-                      </div>
-                    )}
+                        )
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

@@ -444,7 +444,7 @@ async def get_image(image_id: str):
 
 @api_router.post("/trash/report")
 async def report_trash(request: Request, data: dict):
-    """Report a new trash location (points awarded after admin verifies the collection)"""
+    """Report a new trash location - awards small points immediately for contributing to the community"""
     user = await get_user_from_session(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -452,19 +452,41 @@ async def report_trash(request: Request, data: dict):
     # Verify trash in image (for reference, AI check)
     ai_verified = await verify_trash_in_image(data["image_url"])
     
+    # Award small points for reporting trash (encourages community participation)
+    report_points = 5
+    
     report = TrashReport(
         location=Location(**data["location"]),
         image_url=data["image_url"],
         thumbnail_url=data.get("thumbnail_url"),
         reporter_id=user.user_id,
         ai_verified=ai_verified,
-        points_awarded=0  # No points for just reporting - only when collected and verified
+        points_awarded=report_points
     )
     
     await db.trash_reports.insert_one(report.model_dump())
-    # No immediate points - points only given when cleanup is admin-verified
     
-    return report
+    # Award points immediately for reporting (no admin verification needed for reports)
+    await update_user_points(user.user_id, report_points)
+    
+    # Update group points too
+    if user.joined_groups:
+        for group_id in user.joined_groups:
+            await db.groups.update_one(
+                {"group_id": group_id},
+                {"$inc": {"total_points": report_points, "weekly_points": report_points}}
+            )
+    
+    return {
+        "report_id": report.report_id,
+        "location": report.location.model_dump(),
+        "image_url": report.image_url,
+        "status": report.status,
+        "reporter_id": report.reporter_id,
+        "ai_verified": report.ai_verified,
+        "points_awarded": report_points,
+        "message": f"Thanks for reporting! You earned {report_points} points."
+    }
 
 @api_router.post("/trash/collect/{report_id}")
 async def collect_trash(request: Request, report_id: str, data: dict):
