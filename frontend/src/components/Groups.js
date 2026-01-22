@@ -413,11 +413,12 @@ function GroupDetailsModal({ group, onClose, isMember }) {
                         )}
                       </div>
                     </div>
-                    {(isAdmin || currentUserId === event.created_by) && (
+                    {(canDeleteEvents || currentUserId === event.created_by) && (
                       <button
                         onClick={() => handleDeleteEvent(event.event_id)}
                         className="text-red-600 hover:text-red-800 ml-2"
                         title="Delete event"
+                        data-testid={`delete-event-${event.event_id}`}
                       >
                         <X className="w-4 h-4" />
                       </button>
