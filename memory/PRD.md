@@ -87,6 +87,9 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - [x] Issue 3: Admin delete trash photos - Delete button functional
 - [x] Issue 4: Event deletion - Fixed to check app admin status
 - [x] Issue 5: Dashboard upcoming events - API working correctly
+- [x] Group owner can delete their group
+- [x] Non-owner members can leave groups
+- [x] Owner cannot leave (must delete instead)
 
 ## API Endpoints
 
