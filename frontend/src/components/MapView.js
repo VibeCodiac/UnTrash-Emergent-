@@ -99,6 +99,9 @@ function MapView({ user }) {
   const [heatMapData, setHeatMapData] = useState([]);
   const [showShareModal, setShowShareModal] = useState(false);
   const [lastCollectionPoints, setLastCollectionPoints] = useState(0);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
 
   // Berlin center coordinates
   const berlinCenter = [52.520008, 13.404954];
@@ -108,6 +111,58 @@ function MapView({ user }) {
     loadCleanedAreas();
     loadHeatMapData();
   }, []);
+
+  // Get user's current location
+  const getCurrentLocation = () => {
+    return new Promise((resolve, reject) => {
+      setGettingLocation(true);
+      setLocationError(null);
+      
+      if (!navigator.geolocation) {
+        setLocationError('Geolocation is not supported by your browser');
+        setGettingLocation(false);
+        reject(new Error('Geolocation not supported'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          };
+          setUserLocation(location);
+          setGettingLocation(false);
+          resolve(location);
+        },
+        (error) => {
+          let errorMessage = 'Unable to get your location';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location permission denied. Please enable location access in your browser settings.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information unavailable. Please try again.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out. Please try again.';
+              break;
+            default:
+              errorMessage = 'An unknown error occurred getting your location.';
+          }
+          setLocationError(errorMessage);
+          setGettingLocation(false);
+          reject(new Error(errorMessage));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    });
+  };
 
   const loadTrashReports = async () => {
     try {
