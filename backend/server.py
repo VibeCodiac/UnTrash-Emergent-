@@ -607,6 +607,20 @@ async def create_group_event(request: Request, group_id: str, data: dict):
     )
     
     await db.group_events.insert_one(event.model_dump())
+    
+    # Send mock notifications to all group members
+    for member_id in group.get("member_ids", []):
+        if member_id != user.user_id:  # Don't notify the creator
+            # Check if user wants notifications
+            prefs = await db.notification_preferences.find_one({"user_id": member_id}, {"_id": 0})
+            if prefs and prefs.get("notify_new_events", True):
+                await send_mock_notification(
+                    member_id,
+                    "new_event",
+                    f"New Event in {group['name']}",
+                    f"{user.name} created a new event: '{event.title}' on {event.event_date.strftime('%B %d, %Y')}"
+                )
+    
     return event
 
 @api_router.get("/groups/{group_id}/events")
