@@ -524,7 +524,7 @@ function ReportTrashModal({ onClose, onSubmit, loading }) {
       formData.append('folder', 'untrash/reports');
 
       const uploadResponse = await axios.post(
-        `https://api.cloudinary.com/v1_1/dx9sbx0lc/image/upload`,
+        CLOUDINARY_UPLOAD_URL,
         formData
       );
 
@@ -667,7 +667,7 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
       formData.append('folder', 'untrash/cleanings');
 
       const uploadResponse = await axios.post(
-        `https://api.cloudinary.com/v1_1/dx9sbx0lc/image/upload`,
+        CLOUDINARY_UPLOAD_URL,
         formData
       );
 
@@ -822,7 +822,7 @@ function CollectTrashModal({ report, onClose, onSubmit, loading }) {
       formData.append('folder', 'untrash/collections');
 
       const uploadResponse = await axios.post(
-        `https://api.cloudinary.com/v1_1/dx9sbx0lc/image/upload`,
+        CLOUDINARY_UPLOAD_URL,
         formData
       );
 
