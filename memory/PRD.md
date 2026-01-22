@@ -110,6 +110,10 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - [x] Delete trash reports deducts points from reporter and collector
 - [x] Admin panel shows pending verifications with notification badge
 - [x] Ban/unban user functionality working
+- [x] Test data filtered from frontend map (placeholder/test images hidden)
+- [x] Points scaled back (Report: 5, Collect: 15-25, Area: 2/100m²)
+- [x] Admin can reset user points via modal
+- [x] Beautiful animated medals with shimmer/glow effects
 
 ## API Endpoints
 
