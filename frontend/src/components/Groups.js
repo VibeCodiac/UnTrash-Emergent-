@@ -272,6 +272,7 @@ function GroupDetailsModal({ group, onClose, isMember }) {
   const [members, setMembers] = useState([]);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [isAppAdmin, setIsAppAdmin] = useState(false);
 
   useEffect(() => {
     loadGroupDetails();
@@ -282,6 +283,7 @@ function GroupDetailsModal({ group, onClose, isMember }) {
     try {
       const response = await axios.get(`${API}/auth/me`, { withCredentials: true });
       setCurrentUserId(response.data.user_id);
+      setIsAppAdmin(response.data.is_admin || false);
     } catch (error) {
       console.error('Error loading current user:', error);
     }
