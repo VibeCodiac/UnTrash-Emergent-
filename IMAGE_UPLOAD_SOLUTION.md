@@ -30,7 +30,7 @@ I've replaced Cloudinary with a **simple, working image upload system** that sto
 ### Test Photo Upload Right Now:
 
 1. **Sign in with Google**
-   - Go to: https://berlin-cleanup.preview.emergentagent.com
+   - Go to: https://bln-cleanup.preview.emergentagent.com
    - Click "Sign in with Google"
    - Complete authentication
 

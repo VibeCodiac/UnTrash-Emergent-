@@ -98,7 +98,7 @@ The app requires Google authentication before you can:
 ### Step-by-step fix:
 
 1. **Sign in with Google:**
-   - Go to https://berlin-cleanup.preview.emergentagent.com
+   - Go to https://bln-cleanup.preview.emergentagent.com
    - Click "Sign in with Google"
    - Complete Google auth
    - You'll be redirected to Dashboard
