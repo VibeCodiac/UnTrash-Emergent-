@@ -833,7 +833,7 @@ function CollectTrashModal({ report, onClose, onSubmit, loading }) {
 
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-2">Original report:</p>
-          <ImageDisplay src={report.image_url} alt="Original trash" className="w-full h-48 object-cover rounded-lg" />
+          <img src={report.image_url} alt="Original trash" className="w-full h-48 object-cover rounded-lg" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
