@@ -229,7 +229,7 @@ function Dashboard({ user }) {
 
         {/* My Recent Medals */}
         {user?.medals && Object.keys(user.medals).length > 0 && (
-          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl shadow-lg p-8">
+          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl shadow-lg p-8 mb-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 flex items-center">
                 <Award className="w-8 h-8 mr-3 text-yellow-600" />
@@ -261,6 +261,52 @@ function Dashboard({ user }) {
                   </div>
                 ))
               ).slice(0, 3)}
+            </div>
+          </div>
+        )}
+
+        {/* Upcoming Group Events */}
+        {upcomingEvents.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                <Calendar className="w-8 h-8 mr-3 text-purple-600" />
+                Upcoming Group Events
+              </h2>
+              <button
+                onClick={() => navigate('/groups')}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                View All Groups →
+              </button>
+            </div>
+            <div className="space-y-3">
+              {upcomingEvents.map((event) => (
+                <div key={event.event_id} className="p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{event.title}</h3>
+                      {event.description && (
+                        <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                      )}
+                      <div className="flex items-center space-x-4 mt-2">
+                        <span className="text-xs text-purple-700 font-medium">
+                          📅 {new Date(event.event_date).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        <span className="text-xs text-gray-600">
+                          👥 {event.group_name}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
