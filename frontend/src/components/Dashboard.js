@@ -348,7 +348,7 @@ function Dashboard({ user }) {
             >
               <MapPin className="w-8 h-8 md:w-10 md:h-10 text-red-600 mb-2" />
               <span className="text-sm md:text-base font-semibold text-gray-900">Report Trash</span>
-              <span className="text-xs text-gray-600">+5 points</span>
+              <span className="text-xs text-gray-600">Mark a spot</span>
             </button>
             <button
               onClick={() => navigate('/map')}
@@ -357,7 +357,7 @@ function Dashboard({ user }) {
             >
               <Trophy className="w-8 h-8 md:w-10 md:h-10 text-green-600 mb-2" />
               <span className="text-sm md:text-base font-semibold text-gray-900">Collect Trash</span>
-              <span className="text-xs text-gray-600">+15-25 points</span>
+              <span className="text-xs text-gray-600">Earn points</span>
             </button>
             <button
               onClick={() => navigate('/groups')}
