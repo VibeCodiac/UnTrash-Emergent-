@@ -108,8 +108,9 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 ### Groups
 - `GET/POST /api/groups` - List/create groups
 - `GET /api/groups/{group_id}` - Get group details
+- `DELETE /api/groups/{group_id}` - Delete group (owner only)
 - `POST /api/groups/{group_id}/join` - Join group
-- `POST /api/groups/{group_id}/leave` - Leave group
+- `POST /api/groups/{group_id}/leave` - Leave group (non-owner only)
 - `GET /api/groups/{group_id}/members` - List members
 - `GET/POST /api/groups/{group_id}/events` - List/create events
 - `DELETE /api/groups/{group_id}/events/{event_id}` - Delete event
