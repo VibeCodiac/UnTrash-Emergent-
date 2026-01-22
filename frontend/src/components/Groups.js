@@ -131,7 +131,9 @@ function Groups({ user }) {
                   key={group.group_id}
                   group={group}
                   isMember={true}
+                  isOwner={isGroupOwner(group)}
                   onLeave={() => handleLeaveGroup(group.group_id)}
+                  onDelete={() => handleDeleteGroup(group.group_id)}
                   onViewDetails={() => setSelectedGroup(group)}
                   loading={loading}
                 />
@@ -149,6 +151,7 @@ function Groups({ user }) {
                 key={group.group_id}
                 group={group}
                 isMember={false}
+                isOwner={false}
                 onJoin={() => handleJoinGroup(group.group_id)}
                 onViewDetails={() => setSelectedGroup(group)}
                 loading={loading}
