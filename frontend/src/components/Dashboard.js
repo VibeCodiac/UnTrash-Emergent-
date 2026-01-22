@@ -105,6 +105,16 @@ function Dashboard({ user }) {
                 <Settings className="w-5 h-5" />
                 <span>Settings</span>
               </button>
+              {user?.is_admin && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
+                  data-testid="nav-admin-button"
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Admin</span>
+                </button>
+              )}
               <button
                 onClick={handleLogout}
                 className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
