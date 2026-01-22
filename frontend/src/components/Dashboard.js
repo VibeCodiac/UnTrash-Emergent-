@@ -143,6 +143,38 @@ function Dashboard({ user }) {
           </div>
         </div>
 
+        {/* Berlin-wide Weekly Stats */}
+        <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl shadow-lg p-8 mb-8 text-white">
+          <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <MapPin className="w-8 h-8 mr-3" />
+            This Week in Berlin
+          </h2>
+          {loading ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white bg-opacity-20 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium opacity-90">Trash Reports</span>
+                  <span className="text-xs bg-red-500 px-2 py-1 rounded">Active</span>
+                </div>
+                <p className="text-5xl font-bold" data-testid="weekly-reports">{weeklyStats.reports}</p>
+                <p className="text-sm opacity-75 mt-2">Locations reported this week</p>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium opacity-90">Trash Collected</span>
+                  <span className="text-xs bg-green-500 px-2 py-1 rounded">Verified</span>
+                </div>
+                <p className="text-5xl font-bold" data-testid="weekly-collections">{weeklyStats.collections}</p>
+                <p className="text-sm opacity-75 mt-2">Items collected this week</p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Quick Actions */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h2>
