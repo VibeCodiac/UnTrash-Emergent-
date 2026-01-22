@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Query, UploadFile, File
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,10 +7,16 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
+import cloudinary
+import cloudinary.utils
+import time
+from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+import base64
+import io
+from PIL import Image
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,63 +26,17 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
-
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
-
-
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
-
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
-
-# Include the router in the main app
-app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
+# Cloudinary configuration
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+    secure=True
 )
+
+# Create the main app
+app = FastAPI()
+api_router = APIRouter(prefix="/api")
 
 # Configure logging
 logging.basicConfig(
@@ -83,6 +44,646 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# ==================== MODELS ====================
+
+class User(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    user_id: str
+    email: str
+    name: str
+    picture: Optional[str] = None
+    total_points: int = 0
+    monthly_points: int = 0
+    weekly_points: int = 0
+    medals: Dict[str, List[str]] = Field(default_factory=dict)  # {"2025-01": ["bronze", "silver"]}
+    joined_groups: List[str] = Field(default_factory=list)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class UserSession(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    user_id: str
+    session_token: str
+    expires_at: datetime
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class Location(BaseModel):
+    lat: float
+    lng: float
+    address: Optional[str] = None
+
+class TrashReport(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    report_id: str = Field(default_factory=lambda: f"trash_{uuid.uuid4().hex[:12]}")
+    location: Location
+    image_url: str
+    thumbnail_url: Optional[str] = None
+    status: str = "reported"  # reported, collected
+    reporter_id: str
+    collector_id: Optional[str] = None
+    ai_verified: bool = False
+    points_awarded: int = 0
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    collected_at: Optional[datetime] = None
+
+class AreaCleaning(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    area_id: str = Field(default_factory=lambda: f"area_{uuid.uuid4().hex[:12]}")
+    user_id: str
+    center_location: Location
+    polygon_coords: List[List[float]]  # [[lat, lng], [lat, lng], ...]
+    area_size: float  # in square meters
+    image_url: str
+    ai_verified: bool = False
+    points_awarded: int = 0
+    expires_at: datetime  # When green zone expires
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class Group(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    group_id: str = Field(default_factory=lambda: f"group_{uuid.uuid4().hex[:12]}")
+    name: str
+    description: Optional[str] = None
+    admin_ids: List[str]
+    member_ids: List[str] = Field(default_factory=list)
+    total_points: int = 0
+    weekly_points: int = 0
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class GroupEvent(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    event_id: str = Field(default_factory=lambda: f"event_{uuid.uuid4().hex[:12]}")
+    group_id: str
+    title: str
+    description: Optional[str] = None
+    location: Optional[Location] = None
+    event_date: datetime
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# ==================== HELPER FUNCTIONS ====================
+
+async def get_user_from_session(request: Request) -> Optional[User]:
+    """Extract and validate user from session token"""
+    session_token = request.cookies.get("session_token")
+    if not session_token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            session_token = auth_header.replace("Bearer ", "")
+    
+    if not session_token:
+        return None
+    
+    session_doc = await db.user_sessions.find_one({"session_token": session_token}, {"_id": 0})
+    if not session_doc:
+        return None
+    
+    # Check expiry
+    expires_at = session_doc["expires_at"]
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
+        return None
+    
+    user_doc = await db.users.find_one({"user_id": session_doc["user_id"]}, {"_id": 0})
+    if not user_doc:
+        return None
+    
+    return User(**user_doc)
+
+async def verify_trash_in_image(image_url: str) -> bool:
+    """Use OpenAI Vision to verify trash in image"""
+    try:
+        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"verify_{uuid.uuid4().hex[:8]}",
+            system_message="You are an image verification assistant. Analyze images and determine if trash/litter is visible."
+        ).with_model("openai", "gpt-5.2")
+        
+        # Download and convert image to base64
+        import requests
+        response = requests.get(image_url)
+        img_data = response.content
+        img_base64 = base64.b64encode(img_data).decode('utf-8')
+        
+        image_content = ImageContent(image_base64=img_base64)
+        user_message = UserMessage(
+            text="Is there visible trash, litter, or waste in this image? Answer with just 'yes' or 'no'.",
+            file_contents=[image_content]
+        )
+        
+        result = await chat.send_message(user_message)
+        return "yes" in result.lower()
+    except Exception as e:
+        logger.error(f"Error verifying image: {e}")
+        return False
+
+def calculate_medal_for_points(monthly_points: int) -> Optional[str]:
+    """Calculate medal based on monthly points"""
+    if monthly_points >= 2000:
+        return "diamond"
+    elif monthly_points >= 1000:
+        return "platinum"
+    elif monthly_points >= 600:
+        return "gold"
+    elif monthly_points >= 300:
+        return "silver"
+    elif monthly_points >= 100:
+        return "bronze"
+    return None
+
+async def update_user_points(user_id: str, points: int):
+    """Update user points and check for medals"""
+    user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user_doc:
+        return
+    
+    new_total = user_doc.get("total_points", 0) + points
+    new_monthly = user_doc.get("monthly_points", 0) + points
+    new_weekly = user_doc.get("weekly_points", 0) + points
+    
+    # Check for medal achievement
+    current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+    medals = user_doc.get("medals", {})
+    new_medal = calculate_medal_for_points(new_monthly)
+    
+    if new_medal:
+        if current_month not in medals:
+            medals[current_month] = []
+        if new_medal not in medals[current_month]:
+            medals[current_month].append(new_medal)
+    
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {
+            "total_points": new_total,
+            "monthly_points": new_monthly,
+            "weekly_points": new_weekly,
+            "medals": medals
+        }}
+    )
+
+# ==================== AUTH ENDPOINTS ====================
+
+@api_router.get("/auth/session")
+async def create_session(session_id: str, response: Response):
+    """Exchange session_id for user data and create session"""
+    try:
+        import requests
+        headers = {"X-Session-ID": session_id}
+        resp = requests.get(
+            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+            headers=headers
+        )
+        
+        if resp.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        data = resp.json()
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        
+        # Check if user exists
+        existing_user = await db.users.find_one({"email": data["email"]}, {"_id": 0})
+        if existing_user:
+            user_id = existing_user["user_id"]
+            # Update user info
+            await db.users.update_one(
+                {"user_id": user_id},
+                {"$set": {
+                    "name": data["name"],
+                    "picture": data["picture"]
+                }}
+            )
+        else:
+            # Create new user
+            user = User(
+                user_id=user_id,
+                email=data["email"],
+                name=data["name"],
+                picture=data["picture"]
+            )
+            await db.users.insert_one(user.model_dump())
+        
+        # Create session
+        session_token = data["session_token"]
+        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+        
+        session = UserSession(
+            user_id=user_id,
+            session_token=session_token,
+            expires_at=expires_at
+        )
+        await db.user_sessions.insert_one(session.model_dump())
+        
+        # Set cookie
+        response.set_cookie(
+            key="session_token",
+            value=session_token,
+            httponly=True,
+            secure=True,
+            samesite="none",
+            path="/",
+            max_age=7 * 24 * 60 * 60
+        )
+        
+        user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+        return user_doc
+    
+    except Exception as e:
+        logger.error(f"Session creation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/auth/me")
+async def get_current_user(request: Request):
+    """Get current authenticated user"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+@api_router.post("/auth/logout")
+async def logout(request: Request, response: Response):
+    """Logout user"""
+    session_token = request.cookies.get("session_token")
+    if session_token:
+        await db.user_sessions.delete_one({"session_token": session_token})
+    response.delete_cookie("session_token", path="/")
+    return {"message": "Logged out"}
+
+# ==================== CLOUDINARY ENDPOINTS ====================
+
+@api_router.get("/cloudinary/signature")
+async def generate_cloudinary_signature(
+    request: Request,
+    resource_type: str = Query("image", enum=["image", "video"]),
+    folder: str = "untrash"
+):
+    """Generate signed upload parameters for Cloudinary"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    timestamp = int(time.time())
+    params = {
+        "timestamp": timestamp,
+        "folder": folder,
+        "resource_type": resource_type
+    }
+    
+    signature = cloudinary.utils.api_sign_request(
+        params,
+        os.environ.get("CLOUDINARY_API_SECRET")
+    )
+    
+    return {
+        "signature": signature,
+        "timestamp": timestamp,
+        "cloud_name": os.environ.get("CLOUDINARY_CLOUD_NAME"),
+        "api_key": os.environ.get("CLOUDINARY_API_KEY"),
+        "folder": folder,
+        "resource_type": resource_type
+    }
+
+# ==================== TRASH ENDPOINTS ====================
+
+@api_router.post("/trash/report")
+async def report_trash(request: Request, data: dict):
+    """Report a new trash location"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Verify trash in image
+    ai_verified = await verify_trash_in_image(data["image_url"])
+    
+    report = TrashReport(
+        location=Location(**data["location"]),
+        image_url=data["image_url"],
+        thumbnail_url=data.get("thumbnail_url"),
+        reporter_id=user.user_id,
+        ai_verified=ai_verified,
+        points_awarded=10
+    )
+    
+    await db.trash_reports.insert_one(report.model_dump())
+    await update_user_points(user.user_id, 10)
+    
+    return report
+
+@api_router.post("/trash/collect/{report_id}")
+async def collect_trash(request: Request, report_id: str, data: dict):
+    """Mark trash as collected with proof photo"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    report = await db.trash_reports.find_one({"report_id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    if report["status"] == "collected":
+        raise HTTPException(status_code=400, detail="Already collected")
+    
+    # Verify trash is gone
+    ai_verified = not await verify_trash_in_image(data["proof_image_url"])
+    
+    points = 50 if ai_verified else 30
+    
+    await db.trash_reports.update_one(
+        {"report_id": report_id},
+        {"$set": {
+            "status": "collected",
+            "collector_id": user.user_id,
+            "collected_at": datetime.now(timezone.utc),
+            "ai_verified": ai_verified,
+            "points_awarded": points
+        }}
+    )
+    
+    await update_user_points(user.user_id, points)
+    
+    # Update group points if user is in groups
+    if user.joined_groups:
+        for group_id in user.joined_groups:
+            await db.groups.update_one(
+                {"group_id": group_id},
+                {"$inc": {"total_points": points, "weekly_points": points}}
+            )
+    
+    return {"message": "Collected successfully", "points": points, "ai_verified": ai_verified}
+
+@api_router.get("/trash/list")
+async def list_trash_reports(
+    status: Optional[str] = None,
+    limit: int = 100
+):
+    """Get list of trash reports"""
+    query = {}
+    if status:
+        query["status"] = status
+    
+    reports = await db.trash_reports.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    return reports
+
+@api_router.get("/trash/{report_id}")
+async def get_trash_report(report_id: str):
+    """Get specific trash report"""
+    report = await db.trash_reports.find_one({"report_id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return report
+
+# ==================== AREA CLEANING ENDPOINTS ====================
+
+@api_router.post("/areas/clean")
+async def clean_area(request: Request, data: dict):
+    """Mark an area as cleaned"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Calculate points based on area size (5 points per 100 sq meters, min 25)
+    area_size = data.get("area_size", 100)
+    points = max(25, int(area_size / 100 * 5))
+    
+    # Area stays green for 7 days
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    
+    area = AreaCleaning(
+        user_id=user.user_id,
+        center_location=Location(**data["center_location"]),
+        polygon_coords=data["polygon_coords"],
+        area_size=area_size,
+        image_url=data["image_url"],
+        points_awarded=points,
+        expires_at=expires_at,
+        ai_verified=True
+    )
+    
+    await db.area_cleanings.insert_one(area.model_dump())
+    await update_user_points(user.user_id, points)
+    
+    return area
+
+@api_router.get("/areas/active")
+async def get_active_areas():
+    """Get active cleaned areas (green zones)"""
+    now = datetime.now(timezone.utc)
+    areas = await db.area_cleanings.find(
+        {"expires_at": {"$gt": now}},
+        {"_id": 0}
+    ).to_list(1000)
+    return areas
+
+# ==================== GROUP ENDPOINTS ====================
+
+@api_router.post("/groups")
+async def create_group(request: Request, data: dict):
+    """Create a new group"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    group = Group(
+        name=data["name"],
+        description=data.get("description"),
+        admin_ids=[user.user_id],
+        member_ids=[user.user_id]
+    )
+    
+    await db.groups.insert_one(group.model_dump())
+    
+    # Add group to user's joined groups
+    await db.users.update_one(
+        {"user_id": user.user_id},
+        {"$addToSet": {"joined_groups": group.group_id}}
+    )
+    
+    return group
+
+@api_router.get("/groups")
+async def list_groups(limit: int = 50):
+    """List all groups"""
+    groups = await db.groups.find({}, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    return groups
+
+@api_router.get("/groups/{group_id}")
+async def get_group(group_id: str):
+    """Get specific group"""
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    return group
+
+@api_router.post("/groups/{group_id}/join")
+async def join_group(request: Request, group_id: str):
+    """Join a group"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    if user.user_id in group.get("member_ids", []):
+        raise HTTPException(status_code=400, detail="Already a member")
+    
+    await db.groups.update_one(
+        {"group_id": group_id},
+        {"$addToSet": {"member_ids": user.user_id}}
+    )
+    
+    await db.users.update_one(
+        {"user_id": user.user_id},
+        {"$addToSet": {"joined_groups": group_id}}
+    )
+    
+    return {"message": "Joined successfully"}
+
+@api_router.post("/groups/{group_id}/leave")
+async def leave_group(request: Request, group_id: str):
+    """Leave a group"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    await db.groups.update_one(
+        {"group_id": group_id},
+        {"$pull": {"member_ids": user.user_id}}
+    )
+    
+    await db.users.update_one(
+        {"user_id": user.user_id},
+        {"$pull": {"joined_groups": group_id}}
+    )
+    
+    return {"message": "Left successfully"}
+
+@api_router.get("/groups/{group_id}/members")
+async def get_group_members(group_id: str):
+    """Get group members"""
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    members = await db.users.find(
+        {"user_id": {"$in": group.get("member_ids", [])}},
+        {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "total_points": 1}
+    ).to_list(1000)
+    
+    return members
+
+@api_router.post("/groups/{group_id}/events")
+async def create_group_event(request: Request, group_id: str, data: dict):
+    """Create a group event"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    if user.user_id not in group.get("member_ids", []):
+        raise HTTPException(status_code=403, detail="Not a group member")
+    
+    event = GroupEvent(
+        group_id=group_id,
+        title=data["title"],
+        description=data.get("description"),
+        location=Location(**data["location"]) if data.get("location") else None,
+        event_date=datetime.fromisoformat(data["event_date"]),
+        created_by=user.user_id
+    )
+    
+    await db.group_events.insert_one(event.model_dump())
+    return event
+
+@api_router.get("/groups/{group_id}/events")
+async def get_group_events(group_id: str):
+    """Get group events"""
+    events = await db.group_events.find(
+        {"group_id": group_id},
+        {"_id": 0}
+    ).sort("event_date", 1).to_list(100)
+    return events
+
+# ==================== RANKINGS ENDPOINTS ====================
+
+@api_router.get("/rankings/weekly/users")
+async def get_weekly_user_rankings(limit: int = 50):
+    """Get weekly user rankings"""
+    users = await db.users.find(
+        {},
+        {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "weekly_points": 1}
+    ).sort("weekly_points", -1).limit(limit).to_list(limit)
+    return users
+
+@api_router.get("/rankings/weekly/groups")
+async def get_weekly_group_rankings(limit: int = 50):
+    """Get weekly group rankings"""
+    groups = await db.groups.find(
+        {},
+        {"_id": 0, "group_id": 1, "name": 1, "weekly_points": 1}
+    ).sort("weekly_points", -1).limit(limit).to_list(limit)
+    return groups
+
+# ==================== HEATMAP ENDPOINTS ====================
+
+@api_router.get("/heatmap/data")
+async def get_heatmap_data():
+    """Get heatmap data for trash density"""
+    # Get all reported trash (high density)
+    trash_reports = await db.trash_reports.find(
+        {"status": "reported"},
+        {"_id": 0, "location": 1}
+    ).to_list(1000)
+    
+    # Get cleaned areas (low density)
+    now = datetime.now(timezone.utc)
+    cleaned_areas = await db.area_cleanings.find(
+        {"expires_at": {"$gt": now}},
+        {"_id": 0, "center_location": 1, "area_size": 1}
+    ).to_list(1000)
+    
+    return {
+        "trash_points": [{"lat": r["location"]["lat"], "lng": r["location"]["lng"], "intensity": 1.0} for r in trash_reports],
+        "clean_areas": [{"lat": a["center_location"]["lat"], "lng": a["center_location"]["lng"], "intensity": -0.5} for a in cleaned_areas]
+    }
+
+# ==================== USER ENDPOINTS ====================
+
+@api_router.get("/users/profile")
+async def get_user_profile(request: Request):
+    """Get current user profile with medals"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+@api_router.get("/users/{user_id}")
+async def get_user_by_id(user_id: str):
+    """Get user by ID"""
+    user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user_doc
+
+# Include router
+app.include_router(api_router)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
