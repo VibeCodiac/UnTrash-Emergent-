@@ -11,6 +11,7 @@ import Rankings from './components/Rankings';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
 import AdminPanel from './components/AdminPanel';
+import HowItWorks from './components/HowItWorks';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -31,6 +32,7 @@ function AppRouter() {
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+      <Route path="/how-it-works" element={<ProtectedRoute><HowItWorks /></ProtectedRoute>} />
     </Routes>
   );
 }
