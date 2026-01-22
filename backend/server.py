@@ -444,12 +444,12 @@ async def get_image(image_id: str):
 
 @api_router.post("/trash/report")
 async def report_trash(request: Request, data: dict):
-    """Report a new trash location"""
+    """Report a new trash location (points awarded after admin verifies the collection)"""
     user = await get_user_from_session(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    # Verify trash in image
+    # Verify trash in image (for reference, AI check)
     ai_verified = await verify_trash_in_image(data["image_url"])
     
     report = TrashReport(
@@ -458,11 +458,11 @@ async def report_trash(request: Request, data: dict):
         thumbnail_url=data.get("thumbnail_url"),
         reporter_id=user.user_id,
         ai_verified=ai_verified,
-        points_awarded=5  # Reduced from 10
+        points_awarded=0  # No points for just reporting - only when collected and verified
     )
     
     await db.trash_reports.insert_one(report.model_dump())
-    await update_user_points(user.user_id, 5)  # Reduced from 10
+    # No immediate points - points only given when cleanup is admin-verified
     
     return report
 
