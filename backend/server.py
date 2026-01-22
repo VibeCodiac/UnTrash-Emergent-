@@ -653,9 +653,17 @@ async def leave_group(request: Request, group_id: str):
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if user is the owner (first admin) - owners must delete group instead
+    if group.get("admin_ids") and group["admin_ids"][0] == user.user_id:
+        raise HTTPException(status_code=400, detail="Group owner cannot leave. Delete the group instead.")
+    
     await db.groups.update_one(
         {"group_id": group_id},
-        {"$pull": {"member_ids": user.user_id}}
+        {"$pull": {"member_ids": user.user_id, "admin_ids": user.user_id}}
     )
     
     await db.users.update_one(
@@ -664,6 +672,40 @@ async def leave_group(request: Request, group_id: str):
     )
     
     return {"message": "Left successfully"}
+
+@api_router.delete("/groups/{group_id}")
+async def delete_group(request: Request, group_id: str):
+    """Delete a group (owner only)"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if user is the owner (first admin) or app admin
+    is_owner = group.get("admin_ids") and group["admin_ids"][0] == user.user_id
+    is_app_admin = user.is_admin
+    
+    if not (is_owner or is_app_admin):
+        raise HTTPException(status_code=403, detail="Only the group owner can delete this group")
+    
+    # Remove group from all members' joined_groups
+    member_ids = group.get("member_ids", [])
+    if member_ids:
+        await db.users.update_many(
+            {"user_id": {"$in": member_ids}},
+            {"$pull": {"joined_groups": group_id}}
+        )
+    
+    # Delete all group events
+    await db.group_events.delete_many({"group_id": group_id})
+    
+    # Delete the group
+    await db.groups.delete_one({"group_id": group_id})
+    
+    return {"message": "Group deleted successfully"}
 
 @api_router.get("/groups/{group_id}/members")
 async def get_group_members(group_id: str):
