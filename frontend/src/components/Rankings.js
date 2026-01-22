@@ -40,44 +40,45 @@ function Rankings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center space-x-4">
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="mb-4 md:mb-8 flex items-center space-x-3 md:space-x-4">
           <button
             onClick={() => navigate('/')}
             className="text-gray-600 hover:text-gray-800"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">Weekly Rankings</h1>
+          <h1 className="text-xl md:text-3xl font-bold text-gray-900">Weekly Rankings</h1>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-lg mb-6">
+        <div className="bg-white rounded-xl shadow-lg mb-4 md:mb-6">
           <div className="flex border-b">
             <button
               onClick={() => setActiveTab('users')}
-              className={`flex-1 px-6 py-4 font-semibold transition-colors ${
+              className={`flex-1 px-3 md:px-6 py-3 md:py-4 font-semibold transition-colors text-sm md:text-base ${
                 activeTab === 'users'
                   ? 'text-green-600 border-b-2 border-green-600'
                   : 'text-gray-600 hover:text-gray-800'
               }`}
               data-testid="users-tab"
             >
-              <div className="flex items-center justify-center space-x-2">
-                <User className="w-5 h-5" />
-                <span>Individual Users</span>
+              <div className="flex items-center justify-center space-x-1 md:space-x-2">
+                <User className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="hidden sm:inline">Individual Users</span>
+                <span className="sm:hidden">Users</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('groups')}
-              className={`flex-1 px-6 py-4 font-semibold transition-colors ${
+              className={`flex-1 px-3 md:px-6 py-3 md:py-4 font-semibold transition-colors text-sm md:text-base ${
                 activeTab === 'groups'
                   ? 'text-green-600 border-b-2 border-green-600'
                   : 'text-gray-600 hover:text-gray-800'
               }`}
               data-testid="groups-tab"
             >
-              <div className="flex items-center justify-center space-x-2">
+              <div className="flex items-center justify-center space-x-1 md:space-x-2">
                 <Users className="w-5 h-5" />
                 <span>Groups</span>
               </div>
