@@ -82,30 +82,30 @@ function Profile({ user }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="mb-4 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+          <div className="flex items-center space-x-3 md:space-x-4">
             <button
               onClick={() => navigate('/')}
               className="text-gray-600 hover:text-gray-800"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">My Profile</h1>
           </div>
           <button
             onClick={shareProfile}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center space-x-2 bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base w-full sm:w-auto justify-center"
             data-testid="share-profile-button"
           >
             {shareStatus === 'shared' || shareStatus === 'copied' ? (
               <>
-                <CheckCircle className="w-5 h-5" />
+                <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
                 <span>{shareStatus === 'shared' ? 'Shared!' : 'Copied!'}</span>
               </>
             ) : (
               <>
-                <Share2 className="w-5 h-5" />
+                <Share2 className="w-4 h-4 md:w-5 md:h-5" />
                 <span>Share My Impact</span>
               </>
             )}
@@ -113,19 +113,19 @@ function Profile({ user }) {
         </div>
 
         {/* User Info Card */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-          <div className="flex items-center space-x-6">
+        <div className="bg-white rounded-xl shadow-lg p-4 md:p-8 mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 text-center sm:text-left">
             {user?.picture && (
               <img
                 src={user.picture}
                 alt={user.name}
-                className="w-24 h-24 rounded-full"
+                className="w-20 h-20 md:w-24 md:h-24 rounded-full"
               />
             )}
             <div className="flex-1">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2" data-testid="profile-name">{user?.name}</h2>
-              <p className="text-gray-600" data-testid="profile-email">{user?.email}</p>
-              <p className="text-sm text-gray-500 mt-2">
+              <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2" data-testid="profile-name">{user?.name}</h2>
+              <p className="text-sm md:text-base text-gray-600" data-testid="profile-email">{user?.email}</p>
+              <p className="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">
                 Member since {new Date(user?.created_at).toLocaleDateString()}
               </p>
             </div>
@@ -133,11 +133,34 @@ function Profile({ user }) {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">Total Points</h3>
-              <Trophy className="w-8 h-8 text-yellow-500" />
+        <div className="grid grid-cols-3 gap-2 md:gap-6 mb-4 md:mb-6">
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6">
+            <div className="flex flex-col md:flex-row items-center md:justify-between mb-2 md:mb-4">
+              <h3 className="text-xs md:text-lg font-semibold text-gray-700 text-center">Total</h3>
+              <Trophy className="w-5 h-5 md:w-8 md:h-8 text-yellow-500 hidden md:block" />
+            </div>
+            <p className="text-xl md:text-4xl font-bold text-gray-900 text-center" data-testid="profile-total-points">{user?.total_points || 0}</p>
+            <p className="text-xs text-gray-500 mt-1 md:mt-2 text-center hidden md:block">All-time points</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6">
+            <div className="flex flex-col md:flex-row items-center md:justify-between mb-2 md:mb-4">
+              <h3 className="text-xs md:text-lg font-semibold text-gray-700 text-center">Monthly</h3>
+              <Trophy className="w-5 h-5 md:w-8 md:h-8 text-green-500 hidden md:block" />
+            </div>
+            <p className="text-xl md:text-4xl font-bold text-gray-900 text-center" data-testid="profile-monthly-points">{user?.monthly_points || 0}</p>
+            <p className="text-xs text-gray-500 mt-1 md:mt-2 text-center hidden md:block">This month</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-6">
+            <div className="flex flex-col md:flex-row items-center md:justify-between mb-2 md:mb-4">
+              <h3 className="text-xs md:text-lg font-semibold text-gray-700 text-center">Medals</h3>
+              <Award className="w-5 h-5 md:w-8 md:h-8 text-purple-500 hidden md:block" />
+            </div>
+            <p className="text-xl md:text-4xl font-bold text-gray-900 text-center" data-testid="profile-medal-count">{allMedals.length}</p>
+            <p className="text-xs text-gray-500 mt-1 md:mt-2 text-center hidden md:block">Achievements</p>
+          </div>
+        </div>
             </div>
             <p className="text-4xl font-bold text-gray-900" data-testid="profile-total-points">{user?.total_points || 0}</p>
             <p className="text-sm text-gray-500 mt-2">All-time points earned</p>
