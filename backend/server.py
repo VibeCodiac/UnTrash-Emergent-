@@ -535,7 +535,7 @@ async def get_trash_report(report_id: str):
 
 @api_router.post("/areas/clean")
 async def clean_area(request: Request, data: dict):
-    """Mark an area as cleaned"""
+    """Mark an area as cleaned (requires admin approval for points)"""
     user = await get_user_from_session(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -555,13 +555,17 @@ async def clean_area(request: Request, data: dict):
         image_url=data["image_url"],
         points_awarded=points,
         expires_at=expires_at,
-        ai_verified=True
+        ai_verified=False,
+        admin_approved=False  # Requires admin approval
     )
     
     await db.area_cleanings.insert_one(area.model_dump())
-    await update_user_points(user.user_id, points)
     
-    return area
+    return {
+        "message": "Area submitted for admin approval",
+        "area_id": area.area_id,
+        "points_pending": points
+    }
 
 @api_router.get("/areas/active")
 async def get_active_areas():
