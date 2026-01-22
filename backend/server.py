@@ -103,6 +103,7 @@ class AreaCleaning(BaseModel):
     area_size: float  # in square meters
     image_url: str
     ai_verified: bool = False
+    admin_approved: bool = False  # Admin verification required
     points_awarded: int = 0
     expires_at: datetime  # When green zone expires
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
