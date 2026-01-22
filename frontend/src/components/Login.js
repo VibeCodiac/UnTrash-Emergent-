@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Sparkles, Users, Trophy } from 'lucide-react';
+import { MapPin, Sparkles, Trophy, Camera, CheckCircle, Users } from 'lucide-react';
 
 function Login() {
   const handleGoogleLogin = () => {
@@ -10,11 +10,10 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
-      {/* Hero Section */}
       <div className="container mx-auto px-4 py-6 md:py-12">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-6 md:mb-12">
+          <div className="text-center mb-6 md:mb-10">
             <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-green-600 rounded-full mb-4 md:mb-6">
               <MapPin className="w-8 h-8 md:w-12 md:h-12 text-white" />
             </div>
@@ -22,41 +21,111 @@ function Login() {
               UnTrash Berlin
             </h1>
             <p className="text-base md:text-xl text-gray-600 max-w-2xl mx-auto px-2">
-              Join the community cleaning up Berlin. Report litter, collect trash, and make our city cleaner together.
+              A community-powered app to keep Berlin clean. Report litter, collect trash, earn points and medals!
             </p>
           </div>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-6 md:mb-12">
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3 md:mb-4">
-                <MapPin className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+          {/* How It Works - Step by Step */}
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6 md:mb-8">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h2>
+            
+            <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-4 md:gap-4">
+              {/* Step 1 */}
+              <div className="flex md:flex-col items-start md:items-center md:text-center">
+                <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-red-100 rounded-full flex items-center justify-center mr-4 md:mr-0 md:mb-3">
+                  <Camera className="w-6 h-6 md:w-8 md:h-8 text-red-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-red-600 font-semibold mb-1">STEP 1</div>
+                  <h3 className="font-semibold text-gray-900 text-sm md:text-base">Spot & Report</h3>
+                  <p className="text-xs md:text-sm text-gray-600">See trash? Take a photo and mark the location on the map. Earn 5 points.</p>
+                </div>
               </div>
-              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">Report Trash</h3>
-              <p className="text-sm md:text-base text-gray-600">See litter? Report it with a photo and location. Earn points for every report.</p>
-            </div>
 
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 md:mb-4">
-                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+              {/* Arrow for desktop */}
+              <div className="hidden md:flex items-center justify-center text-gray-300">
+                →
               </div>
-              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">Collect & Verify</h3>
-              <p className="text-sm md:text-base text-gray-600">Collect reported trash and upload proof. AI verifies your cleanup automatically.</p>
-            </div>
 
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 md:mb-4">
-                <Trophy className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
+              {/* Step 2 */}
+              <div className="flex md:flex-col items-start md:items-center md:text-center">
+                <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-green-100 rounded-full flex items-center justify-center mr-4 md:mr-0 md:mb-3">
+                  <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-green-600 font-semibold mb-1">STEP 2</div>
+                  <h3 className="font-semibold text-gray-900 text-sm md:text-base">Clean & Verify</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Collect the trash and upload a photo of the clean spot. Earn 15-25 points.</p>
+                </div>
               </div>
-              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">Earn Medals</h3>
-              <p className="text-sm md:text-base text-gray-600">Compete for monthly medals: Bronze, Silver, Gold, Platinum, and Diamond.</p>
+
+              {/* Arrow for desktop */}
+              <div className="hidden md:flex items-center justify-center text-gray-300">
+                →
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex md:flex-col items-start md:items-center md:text-center">
+                <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-purple-100 rounded-full flex items-center justify-center mr-4 md:mr-0 md:mb-3">
+                  <Trophy className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-purple-600 font-semibold mb-1">STEP 3</div>
+                  <h3 className="font-semibold text-gray-900 text-sm md:text-base">Earn Medals</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Collect points monthly to earn Bronze, Silver, Gold, Platinum, or Diamond medals!</p>
+                </div>
+              </div>
+
+              {/* Arrow for desktop */}
+              <div className="hidden md:flex items-center justify-center text-gray-300">
+                →
+              </div>
+
+              {/* Step 4 */}
+              <div className="flex md:flex-col items-start md:items-center md:text-center">
+                <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mr-4 md:mr-0 md:mb-3">
+                  <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
+                </div>
+                <div>
+                  <div className="text-xs text-blue-600 font-semibold mb-1">STEP 4</div>
+                  <h3 className="font-semibold text-gray-900 text-sm md:text-base">Join Groups</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Team up with others for cleanup events and compete on the leaderboard!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Medal Tiers */}
+          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl shadow-lg p-6 md:p-8 mb-6 md:mb-8">
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-4 text-center">Monthly Medal Tiers</h3>
+            <div className="flex flex-wrap justify-center gap-3 md:gap-6">
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">🥉</span>
+                <span className="text-sm font-medium text-gray-700">Bronze: 30 pts</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">🥈</span>
+                <span className="text-sm font-medium text-gray-700">Silver: 75 pts</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">🥇</span>
+                <span className="text-sm font-medium text-gray-700">Gold: 150 pts</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">⭐</span>
+                <span className="text-sm font-medium text-gray-700">Platinum: 300 pts</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">💎</span>
+                <span className="text-sm font-medium text-gray-700">Diamond: 500 pts</span>
+              </div>
             </div>
           </div>
 
           {/* CTA Section */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-12 text-center">
-            <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-4">Ready to make a difference?</h2>
-            <p className="text-sm md:text-lg text-gray-600 mb-4 md:mb-8">Join thousands of Berliners cleaning up our beautiful city.</p>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-10 text-center">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 md:mb-3">Ready to make Berlin cleaner?</h2>
+            <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">Sign in with your Google account to get started</p>
             <button
               onClick={handleGoogleLogin}
               data-testid="google-login-button"
@@ -71,22 +140,6 @@ function Login() {
               Sign in with Google
             </button>
             <p className="text-xs md:text-sm text-gray-500 mt-3 md:mt-4">Free to join • No credit card required</p>
-          </div>
-
-          {/* Stats Section */}
-          <div className="mt-8 md:mt-12 grid grid-cols-3 gap-4 md:gap-8 text-center">
-            <div>
-              <div className="text-2xl md:text-4xl font-bold text-green-600 mb-1 md:mb-2">1,000+</div>
-              <div className="text-xs md:text-base text-gray-600">Active Users</div>
-            </div>
-            <div>
-              <div className="text-2xl md:text-4xl font-bold text-green-600 mb-1 md:mb-2">5,000+</div>
-              <div className="text-xs md:text-base text-gray-600">Trash Collected</div>
-            </div>
-            <div>
-              <div className="text-2xl md:text-4xl font-bold text-green-600 mb-1 md:mb-2">50+</div>
-              <div className="text-xs md:text-base text-gray-600">Cleanup Groups</div>
-            </div>
           </div>
         </div>
       </div>
