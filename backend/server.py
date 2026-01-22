@@ -199,16 +199,16 @@ async def verify_trash_in_image(image_url: str) -> bool:
         return False
 
 def calculate_medal_for_points(monthly_points: int) -> Optional[str]:
-    """Calculate medal based on monthly points"""
-    if monthly_points >= 2000:
+    """Calculate medal based on monthly points (adjusted for reduced point values)"""
+    if monthly_points >= 500:
         return "diamond"
-    elif monthly_points >= 1000:
-        return "platinum"
-    elif monthly_points >= 600:
-        return "gold"
     elif monthly_points >= 300:
+        return "platinum"
+    elif monthly_points >= 150:
+        return "gold"
+    elif monthly_points >= 75:
         return "silver"
-    elif monthly_points >= 100:
+    elif monthly_points >= 30:
         return "bronze"
     return None
 
