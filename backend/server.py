@@ -945,6 +945,48 @@ async def delete_trash_report(request: Request, report_id: str):
         "points_deducted": points_deducted
     }
 
+@api_router.post("/admin/users/{user_id}/reset-points")
+async def reset_user_points(request: Request, user_id: str, data: dict = None):
+    """Reset or adjust user points (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    target_user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get new values from request or default to 0
+    data = data or {}
+    new_total = data.get("total_points", 0)
+    new_monthly = data.get("monthly_points", 0)
+    new_weekly = data.get("weekly_points", 0)
+    clear_medals = data.get("clear_medals", False)
+    
+    update_fields = {
+        "total_points": new_total,
+        "monthly_points": new_monthly,
+        "weekly_points": new_weekly
+    }
+    
+    if clear_medals:
+        update_fields["medals"] = {}
+    
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": update_fields}
+    )
+    
+    return {
+        "message": f"Points reset for user {user_id}",
+        "new_points": {
+            "total": new_total,
+            "monthly": new_monthly,
+            "weekly": new_weekly
+        },
+        "medals_cleared": clear_medals
+    }
+
 @api_router.put("/admin/trash/{report_id}")
 async def update_trash_report(request: Request, report_id: str, data: dict):
     """Update a trash report (admin only)"""
