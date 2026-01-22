@@ -480,11 +480,11 @@ async def collect_trash(request: Request, report_id: str, data: dict):
     if report["status"] == "collected":
         raise HTTPException(status_code=400, detail="Already collected")
     
-    # Verify trash is gone using AI
+    # Verify trash is gone using AI (for reference only, not for points)
     ai_verified = not await verify_trash_in_image(data["proof_image_url"])
     
-    # Points to be awarded after admin verification (reduced)
-    points = 25 if ai_verified else 15  # Reduced from 50/30
+    # Fixed points for all collections - awarded after admin verification
+    points = 20
     
     await db.trash_reports.update_one(
         {"report_id": report_id},
