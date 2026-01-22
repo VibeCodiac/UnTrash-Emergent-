@@ -1044,6 +1044,130 @@ async def reject_area_cleaning(request: Request, area_id: str):
     
     return {"message": "Area cleaning rejected and deleted"}
 
+@api_router.get("/admin/collections/pending")
+async def list_pending_collections(request: Request):
+    """List trash collections pending admin verification (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    collections = await db.trash_reports.find(
+        {
+            "status": "collected",
+            "admin_verified": False
+        },
+        {"_id": 0}
+    ).sort("collected_at", -1).to_list(100)
+    
+    # Add user info for collector
+    for collection in collections:
+        if collection.get("collector_id"):
+            collector_doc = await db.users.find_one(
+                {"user_id": collection["collector_id"]},
+                {"_id": 0, "name": 1, "email": 1}
+            )
+            if collector_doc:
+                collection["collector_name"] = collector_doc.get("name")
+                collection["collector_email"] = collector_doc.get("email")
+    
+    return collections
+
+@api_router.post("/admin/collections/{report_id}/approve")
+async def approve_collection(request: Request, report_id: str):
+    """Approve trash collection and award points (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    report = await db.trash_reports.find_one({"report_id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    if report.get("status") != "collected":
+        raise HTTPException(status_code=400, detail="Report is not in collected status")
+    
+    if report.get("admin_verified"):
+        raise HTTPException(status_code=400, detail="Collection already verified")
+    
+    # Mark as verified
+    await db.trash_reports.update_one(
+        {"report_id": report_id},
+        {"$set": {"admin_verified": True, "points_given": True}}
+    )
+    
+    # Award points to collector
+    collector_id = report.get("collector_id")
+    points = report.get("points_awarded", 30)
+    
+    if collector_id:
+        await update_user_points(collector_id, points)
+        
+        # Update group points
+        collector_doc = await db.users.find_one({"user_id": collector_id}, {"_id": 0, "joined_groups": 1})
+        if collector_doc and collector_doc.get("joined_groups"):
+            for group_id in collector_doc["joined_groups"]:
+                await db.groups.update_one(
+                    {"group_id": group_id},
+                    {"$inc": {"total_points": points, "weekly_points": points}}
+                )
+    
+    return {"message": "Collection approved and points awarded", "points": points}
+
+@api_router.delete("/admin/collections/{report_id}")
+async def reject_collection(request: Request, report_id: str):
+    """Reject trash collection - revert to reported status (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    report = await db.trash_reports.find_one({"report_id": report_id}, {"_id": 0})
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    if report.get("status") != "collected":
+        raise HTTPException(status_code=400, detail="Report is not in collected status")
+    
+    # Revert to reported status
+    await db.trash_reports.update_one(
+        {"report_id": report_id},
+        {
+            "$set": {"status": "reported"},
+            "$unset": {
+                "collector_id": "",
+                "collected_at": "",
+                "collection_image_url": "",
+                "ai_verified": "",
+                "admin_verified": "",
+                "points_awarded": "",
+                "points_given": ""
+            }
+        }
+    )
+    
+    return {"message": "Collection rejected - report reverted to 'reported' status"}
+
+@api_router.get("/admin/pending-count")
+async def get_pending_counts(request: Request):
+    """Get counts of pending verifications for admin dashboard (admin only)"""
+    user = await get_user_from_session(request)
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    pending_collections = await db.trash_reports.count_documents({
+        "status": "collected",
+        "admin_verified": False
+    })
+    
+    pending_areas = await db.area_cleanings.count_documents({
+        "admin_approved": False
+    })
+    
+    return {
+        "pending_collections": pending_collections,
+        "pending_areas": pending_areas,
+        "total_pending": pending_collections + pending_areas
+    }
+
 # ==================== STATS ENDPOINTS ====================
 
 @api_router.get("/stats/weekly")
