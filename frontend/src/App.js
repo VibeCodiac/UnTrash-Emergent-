@@ -30,6 +30,7 @@ function AppRouter() {
       <Route path="/rankings" element={<ProtectedRoute><Rankings /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
     </Routes>
   );
 }
