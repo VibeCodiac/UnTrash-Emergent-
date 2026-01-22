@@ -2,12 +2,36 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Users, Trophy, User, LogOut } from 'lucide-react';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
 function Dashboard({ user }) {
   const navigate = useNavigate();
+  const [weeklyStats, setWeeklyStats] = useState({ reports: 0, collections: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadWeeklyStats();
+  }, []);
+
+  const loadWeeklyStats = async () => {
+    try {
+      const response = await fetch(`${API}/stats/weekly`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setWeeklyStats(data);
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
-    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-    await fetch(`${BACKEND_URL}/api/auth/logout`, {
+    await fetch(`${API}/auth/logout`, {
       method: 'POST',
       credentials: 'include'
     });
