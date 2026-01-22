@@ -890,7 +890,7 @@ async def unban_user(request: Request, user_id: str):
 
 @api_router.delete("/admin/trash/{report_id}")
 async def delete_trash_report(request: Request, report_id: str):
-    """Delete a trash report (admin only)"""
+    """Delete a trash report and deduct any awarded points (admin only)"""
     user = await get_user_from_session(request)
     if not user or not user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -899,9 +899,51 @@ async def delete_trash_report(request: Request, report_id: str):
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
     
+    points_deducted = []
+    
+    # Deduct reporter points (10 points for reporting)
+    if report.get("reporter_id"):
+        reporter_id = report["reporter_id"]
+        await db.users.update_one(
+            {"user_id": reporter_id},
+            {"$inc": {
+                "total_points": -10,
+                "monthly_points": -10,
+                "weekly_points": -10
+            }}
+        )
+        points_deducted.append(f"Reporter {reporter_id}: -10 points")
+    
+    # Deduct collector points if collection was verified and points were given
+    if report.get("collector_id") and report.get("points_given", False):
+        collector_id = report["collector_id"]
+        collector_points = report.get("points_awarded", 0)
+        if collector_points > 0:
+            await db.users.update_one(
+                {"user_id": collector_id},
+                {"$inc": {
+                    "total_points": -collector_points,
+                    "monthly_points": -collector_points,
+                    "weekly_points": -collector_points
+                }}
+            )
+            points_deducted.append(f"Collector {collector_id}: -{collector_points} points")
+            
+            # Also deduct from groups
+            collector_doc = await db.users.find_one({"user_id": collector_id}, {"_id": 0, "joined_groups": 1})
+            if collector_doc and collector_doc.get("joined_groups"):
+                for group_id in collector_doc["joined_groups"]:
+                    await db.groups.update_one(
+                        {"group_id": group_id},
+                        {"$inc": {"total_points": -collector_points, "weekly_points": -collector_points}}
+                    )
+    
     await db.trash_reports.delete_one({"report_id": report_id})
     
-    return {"message": f"Report {report_id} deleted"}
+    return {
+        "message": f"Report {report_id} deleted",
+        "points_deducted": points_deducted
+    }
 
 @api_router.put("/admin/trash/{report_id}")
 async def update_trash_report(request: Request, report_id: str, data: dict):
