@@ -176,7 +176,7 @@ function AdminPanel({ user }) {
         </div>
 
         {/* Trash Reports Management */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div className="flex items-center space-x-3 mb-6">
             <Trash2 className="w-6 h-6 text-red-600" />
             <h2 className="text-2xl font-bold text-gray-900">Trash Reports Management</h2>
@@ -220,6 +220,62 @@ function AdminPanel({ user }) {
             ))}
           </div>
         </div>
+
+        {/* Pending Area Cleanings */}
+        {pendingAreas.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <CheckCircle className="w-6 h-6 text-yellow-600" />
+              <h2 className="text-2xl font-bold text-gray-900">Pending Area Cleanings ({pendingAreas.length})</h2>
+            </div>
+            
+            <div className="space-y-3">
+              {pendingAreas.map((area) => (
+                <div key={area.area_id} className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-start justify-between">
+                    <div className="flex space-x-3">
+                      <img src={area.image_url} alt="Cleaned area" className="w-20 h-20 object-cover rounded" />
+                      <div>
+                        <p className="font-semibold text-gray-900">Area Cleaning - Awaiting Approval</p>
+                        <p className="text-sm text-gray-600">
+                          User: {area.user_name} ({area.user_email})
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Size: {Math.round(area.area_size)} m²
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Location: {area.center_location.lat.toFixed(4)}, {area.center_location.lng.toFixed(4)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Submitted: {new Date(area.created_at).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm font-semibold text-green-600 mt-1">
+                          Points to award: {area.points_awarded}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleApproveArea(area.area_id)}
+                        className="flex items-center space-x-1 bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Approve</span>
+                      </button>
+                      <button
+                        onClick={() => handleRejectArea(area.area_id)}
+                        className="flex items-center space-x-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700"
+                      >
+                        <Ban className="w-4 h-4" />
+                        <span>Reject</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
