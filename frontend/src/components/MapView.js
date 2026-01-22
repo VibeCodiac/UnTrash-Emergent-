@@ -241,60 +241,66 @@ function MapView({ user }) {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
-      <div className="bg-white shadow-lg p-4 flex justify-between items-center z-10">
+      {/* Header - Mobile Responsive */}
+      <div className="bg-white shadow-lg p-2 md:p-4 flex justify-between items-center z-10">
         <div className="flex items-center space-x-2">
-          <MapPin className="w-6 h-6 text-green-600" />
-          <h1 className="text-xl font-bold text-gray-900">UnTrash Berlin - Map</h1>
+          <MapPin className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+          <h1 className="text-base md:text-xl font-bold text-gray-900 hidden sm:block">UnTrash Berlin</h1>
+          <h1 className="text-base font-bold text-gray-900 sm:hidden">Map</h1>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-1 md:space-x-3">
           <button
             onClick={() => setShowHeatMap(!showHeatMap)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+            className={`flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-2 rounded-lg transition-colors ${
               showHeatMap 
                 ? 'bg-purple-600 text-white hover:bg-purple-700' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
             data-testid="toggle-heatmap-button"
+            title="Toggle Heat Map"
           >
             <Layers className="w-4 h-4" />
-            <span className="text-sm font-medium">Heat Map</span>
+            <span className="text-xs md:text-sm font-medium hidden sm:inline">Heat Map</span>
           </button>
           <button
             onClick={() => setShowReportModal(true)}
-            className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            className="flex items-center space-x-1 md:space-x-2 bg-red-600 text-white px-2 md:px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-semibold"
             data-testid="open-report-modal-button"
+            title="Report Trash"
           >
             <Trash2 className="w-4 h-4" />
-            <span>Report Trash</span>
+            <span className="text-xs md:text-sm hidden sm:inline">Report</span>
           </button>
           <button
             onClick={() => setShowCleanAreaModal(true)}
-            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+            className="flex items-center space-x-1 md:space-x-2 bg-green-600 text-white px-2 md:px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
             data-testid="open-clean-area-button"
+            title="Clean Area"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Clean Area</span>
+            <span className="text-xs md:text-sm hidden sm:inline">Clean</span>
           </button>
           <button
             onClick={() => navigate('/')}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            className="bg-gray-600 text-white px-2 md:px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-xs md:text-sm"
+            title="Back to Dashboard"
           >
-            Dashboard
+            <span className="hidden sm:inline">Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </button>
         </div>
       </div>
 
       {/* Message Banner */}
       {message && (
-        <div className={`p-4 z-10 ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        <div className={`p-2 md:p-4 z-10 ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
           <div className="container mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              {message.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-              <span data-testid="message-banner">{message.text}</span>
+              {message.type === 'success' ? <CheckCircle className="w-4 h-4 md:w-5 md:h-5" /> : <AlertCircle className="w-4 h-4 md:w-5 md:h-5" />}
+              <span data-testid="message-banner" className="text-sm md:text-base">{message.text}</span>
             </div>
             <button onClick={() => setMessage(null)} className="text-gray-600 hover:text-gray-800">
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 md:w-5 md:h-5" />
             </button>
           </div>
         </div>
