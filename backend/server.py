@@ -679,6 +679,30 @@ async def get_user_by_id(user_id: str):
         raise HTTPException(status_code=404, detail="User not found")
     return user_doc
 
+# ==================== STATS ENDPOINTS ====================
+
+@api_router.get("/stats/weekly")
+async def get_weekly_stats():
+    """Get Berlin-wide weekly statistics"""
+    from datetime import timedelta
+    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    
+    # Count reports from this week
+    reports_count = await db.trash_reports.count_documents({
+        "created_at": {"$gte": week_ago}
+    })
+    
+    # Count collections from this week
+    collections_count = await db.trash_reports.count_documents({
+        "status": "collected",
+        "collected_at": {"$gte": week_ago}
+    })
+    
+    return {
+        "reports": reports_count,
+        "collections": collections_count
+    }
+
 # Include router
 app.include_router(api_router)
 
