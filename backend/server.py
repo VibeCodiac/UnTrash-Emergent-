@@ -903,6 +903,35 @@ async def get_user_by_id(user_id: str):
         raise HTTPException(status_code=404, detail="User not found")
     return user_doc
 
+@api_router.put("/users/profile")
+async def update_user_profile(request: Request, data: dict):
+    """Update user profile (name and picture)"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    update_fields = {}
+    
+    # Allow updating name
+    if "name" in data and data["name"].strip():
+        update_fields["name"] = data["name"].strip()[:100]  # Limit name length
+    
+    # Allow updating picture URL
+    if "picture" in data and data["picture"]:
+        update_fields["picture"] = data["picture"]
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    
+    await db.users.update_one(
+        {"user_id": user.user_id},
+        {"$set": update_fields}
+    )
+    
+    # Return updated user
+    updated_user = await db.users.find_one({"user_id": user.user_id}, {"_id": 0})
+    return updated_user
+
 # ==================== ADMIN ENDPOINTS ====================
 
 @api_router.post("/admin/users/{user_id}/ban")
