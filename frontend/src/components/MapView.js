@@ -748,12 +748,30 @@ function ReportTrashModal({ onClose, onSubmit, loading, getCurrentLocation, user
               accept="image/*"
               capture="environment"
               onChange={handleImageChange}
-              className="w-full text-sm"
+              className="hidden"
               data-testid="report-image-input"
+              id="report-image-input"
               required
             />
-            {imagePreview && (
-              <img src={imagePreview} alt="Preview" className="mt-2 w-full h-48 object-cover rounded-lg" />
+            {!imagePreview ? (
+              <label
+                htmlFor="report-image-input"
+                className="flex items-center justify-center space-x-2 w-full p-4 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+              >
+                <Camera className="w-6 h-6 text-blue-600" />
+                <span className="font-medium text-blue-600">Take Photo</span>
+              </label>
+            ) : (
+              <div className="relative">
+                <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+                <label
+                  htmlFor="report-image-input"
+                  className="absolute bottom-2 right-2 flex items-center space-x-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 text-sm"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Retake</span>
+                </label>
+              </div>
             )}
           </div>
 
