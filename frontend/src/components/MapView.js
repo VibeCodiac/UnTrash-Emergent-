@@ -924,12 +924,31 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
             <input
               type="file"
               accept="image/*"
+              capture="environment"
               onChange={handleImageChange}
-              className="w-full"
+              className="hidden"
+              id="clean-area-image-input"
               required
             />
-            {imagePreview && (
-              <img src={imagePreview} alt="Preview" className="mt-2 w-full h-48 object-cover rounded-lg" />
+            {!imagePreview ? (
+              <label
+                htmlFor="clean-area-image-input"
+                className="flex items-center justify-center space-x-2 w-full p-4 bg-green-50 border-2 border-dashed border-green-300 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+              >
+                <Camera className="w-6 h-6 text-green-600" />
+                <span className="font-medium text-green-600">Take Photo</span>
+              </label>
+            ) : (
+              <div className="relative">
+                <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+                <label
+                  htmlFor="clean-area-image-input"
+                  className="absolute bottom-2 right-2 flex items-center space-x-1 px-3 py-1.5 bg-green-600 text-white rounded-lg cursor-pointer hover:bg-green-700 text-sm"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Retake</span>
+                </label>
+              </div>
             )}
           </div>
 
