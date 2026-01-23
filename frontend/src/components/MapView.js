@@ -396,7 +396,7 @@ function MapView({ user }) {
                 <div className="p-2">
                   <img src={report.image_url} alt="Trash" className="w-40 h-40 object-cover rounded mb-2" />
                   <p className="text-sm font-semibold mb-1">
-                    Status: <span className={report.status === 'collected' ? 'text-green-600' : 'text-red-600'}>
+                    Status: <span className={report.status === 'collected' ? 'text-green-600' : 'text-blue-600'}>
                       {report.status}
                     </span>
                   </p>
@@ -409,7 +409,7 @@ function MapView({ user }) {
                         setSelectedReport(report);
                         setShowCollectModal(true);
                       }}
-                      className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 w-full"
+                      className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 w-full"
                       data-testid="collect-trash-popup-button"
                     >
                       Collect This Trash
@@ -457,6 +457,16 @@ function MapView({ user }) {
             </Polygon>
           ))}
         </MapContainer>
+
+        {/* Floating Report Button */}
+        <button
+          onClick={() => setShowReportModal(true)}
+          className="absolute bottom-6 right-6 z-[1000] w-16 h-16 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all transform hover:scale-110 flex items-center justify-center"
+          data-testid="floating-report-button"
+          title="Report Trash"
+        >
+          <Package className="w-8 h-8" />
+        </button>
       </div>
 
       {/* Report Modal */}
