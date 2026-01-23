@@ -29,22 +29,17 @@ function Login() {
           <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6 md:mb-8">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h2>
             
-            <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-4 md:gap-4">
+            <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-4 md:gap-6 md:max-w-3xl md:mx-auto">
               {/* Step 1 */}
               <div className="flex md:flex-col items-start md:items-center md:text-center">
-                <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-red-100 rounded-full flex items-center justify-center mr-4 md:mr-0 md:mb-3">
-                  <Camera className="w-6 h-6 md:w-8 md:h-8 text-red-600" />
+                <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mr-4 md:mr-0 md:mb-3">
+                  <Camera className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
                 </div>
                 <div>
-                  <div className="text-xs text-red-600 font-semibold mb-1">STEP 1</div>
+                  <div className="text-xs text-blue-600 font-semibold mb-1">STEP 1</div>
                   <h3 className="font-semibold text-gray-900 text-sm md:text-base">Spot & Report</h3>
                   <p className="text-xs md:text-sm text-gray-600">See trash? Take a photo and your location is automatically detected.</p>
                 </div>
-              </div>
-
-              {/* Arrow for desktop */}
-              <div className="hidden md:flex items-center justify-center text-gray-300">
-                →
               </div>
 
               {/* Step 2 */}
@@ -59,11 +54,6 @@ function Login() {
                 </div>
               </div>
 
-              {/* Arrow for desktop */}
-              <div className="hidden md:flex items-center justify-center text-gray-300">
-                →
-              </div>
-
               {/* Step 3 */}
               <div className="flex md:flex-col items-start md:items-center md:text-center">
                 <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-purple-100 rounded-full flex items-center justify-center mr-4 md:mr-0 md:mb-3">
@@ -76,18 +66,13 @@ function Login() {
                 </div>
               </div>
 
-              {/* Arrow for desktop */}
-              <div className="hidden md:flex items-center justify-center text-gray-300">
-                →
-              </div>
-
               {/* Step 4 */}
               <div className="flex md:flex-col items-start md:items-center md:text-center">
-                <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mr-4 md:mr-0 md:mb-3">
-                  <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
+                <div className="flex-shrink-0 w-12 h-12 md:w-16 md:h-16 bg-amber-100 rounded-full flex items-center justify-center mr-4 md:mr-0 md:mb-3">
+                  <Users className="w-6 h-6 md:w-8 md:h-8 text-amber-600" />
                 </div>
                 <div>
-                  <div className="text-xs text-blue-600 font-semibold mb-1">STEP 4</div>
+                  <div className="text-xs text-amber-600 font-semibold mb-1">STEP 4</div>
                   <h3 className="font-semibold text-gray-900 text-sm md:text-base">Join Groups</h3>
                   <p className="text-xs md:text-sm text-gray-600">Team up with others for cleanup events and compete together!</p>
                 </div>
