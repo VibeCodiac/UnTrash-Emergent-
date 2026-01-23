@@ -854,8 +854,8 @@ async def get_weekly_user_rankings(limit: int = 10):
     return users
 
 @api_router.get("/rankings/weekly/groups")
-async def get_weekly_group_rankings(limit: int = 50):
-    """Get weekly group rankings"""
+async def get_weekly_group_rankings(limit: int = 10):
+    """Get weekly group rankings (top 10)"""
     groups = await db.groups.find(
         {},
         {"_id": 0, "group_id": 1, "name": 1, "weekly_points": 1}
