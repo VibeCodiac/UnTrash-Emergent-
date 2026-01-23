@@ -82,11 +82,13 @@ function ProtectedRoute({ children }) {
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <AppRouter />
-      </BrowserRouter>
-    </div>
+    <LanguageProvider>
+      <div className="App">
+        <BrowserRouter>
+          <AppRouter />
+        </BrowserRouter>
+      </div>
+    </LanguageProvider>
   );
 }
 
