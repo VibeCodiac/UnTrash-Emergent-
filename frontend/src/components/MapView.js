@@ -87,6 +87,7 @@ function HeatMapLayer({ data, show }) {
 
 function MapView({ user }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [trashReports, setTrashReports] = useState([]);
   const [cleanedAreas, setCleanedAreas] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -102,6 +103,7 @@ function MapView({ user }) {
   const [userLocation, setUserLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [openCameraOnMount, setOpenCameraOnMount] = useState(false);
 
   // Berlin center coordinates
   const berlinCenter = [52.520008, 13.404954];
@@ -110,7 +112,13 @@ function MapView({ user }) {
     loadTrashReports();
     loadCleanedAreas();
     loadHeatMapData();
-  }, []);
+    
+    // Check if navigated from dashboard with camera action
+    if (location.state?.openCamera || location.state?.action === 'report') {
+      setOpenCameraOnMount(true);
+      setShowReportModal(true);
+    }
+  }, [location.state]);
 
   // Get user's current location
   const getCurrentLocation = () => {
