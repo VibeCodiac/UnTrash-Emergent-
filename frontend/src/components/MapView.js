@@ -327,11 +327,11 @@ function MapView({ user }) {
           </button>
           <button
             onClick={() => setShowReportModal(true)}
-            className="flex items-center space-x-1 md:space-x-2 bg-red-600 text-white px-2 md:px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            className="flex items-center space-x-1 md:space-x-2 bg-blue-600 text-white px-2 md:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
             data-testid="open-report-modal-button"
             title="Report Trash"
           >
-            <Trash2 className="w-4 h-4" />
+            <Package className="w-4 h-4" />
             <span className="text-xs md:text-sm hidden sm:inline">Report</span>
           </button>
           <button
