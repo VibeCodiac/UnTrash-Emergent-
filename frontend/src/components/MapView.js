@@ -390,7 +390,7 @@ function MapView({ user }) {
             <Marker
               key={report.report_id}
               position={[report.location.lat, report.location.lng]}
-              icon={report.status === 'collected' ? greenIcon : redIcon}
+              icon={report.status === 'collected' ? greenIcon : blueIcon}
             >
               <Popup>
                 <div className="p-2">
