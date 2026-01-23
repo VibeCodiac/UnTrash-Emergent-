@@ -784,6 +784,7 @@ async def create_group_event(request: Request, group_id: str, data: dict):
         title=data["title"],
         description=data.get("description"),
         location=Location(**data["location"]) if data.get("location") else None,
+        location_name=data.get("location_name"),  # Store human-readable location
         event_date=datetime.fromisoformat(data["event_date"]),
         created_by=user.user_id
     )
