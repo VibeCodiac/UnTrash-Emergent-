@@ -462,13 +462,17 @@ function MapView({ user }) {
       {/* Report Modal */}
       {showReportModal && (
         <ReportTrashModal
-          onClose={() => setShowReportModal(false)}
+          onClose={() => {
+            setShowReportModal(false);
+            setOpenCameraOnMount(false);
+          }}
           onSubmit={handleReportTrash}
           loading={loading}
           getCurrentLocation={getCurrentLocation}
           userLocation={userLocation}
           locationError={locationError}
           gettingLocation={gettingLocation}
+          autoOpenCamera={openCameraOnMount}
         />
       )}
 
