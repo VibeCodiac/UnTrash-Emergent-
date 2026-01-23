@@ -126,6 +126,7 @@ class GroupEvent(BaseModel):
     title: str
     description: Optional[str] = None
     location: Optional[Location] = None
+    location_name: Optional[str] = None  # Human-readable location name/address
     event_date: datetime
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
