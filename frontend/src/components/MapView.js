@@ -733,6 +733,7 @@ function ReportTrashModal({ onClose, onSubmit, loading, getCurrentLocation, user
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Photo of Trash</label>
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               capture="environment"
