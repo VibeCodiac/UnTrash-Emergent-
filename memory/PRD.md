@@ -16,8 +16,8 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - Admin role for `stephanj.thurm@gmail.com`
 
 ### Trash Reporting & Collection
-- Report trash with photo + location (10 points)
-- Collect trash with proof photo (30-50 points based on AI verification)
+- Report trash with photo + location (5 points immediate)
+- Collect trash with proof photo (20 points after admin verification)
 - AI verification using OpenAI Vision via Emergent LLM Key
 - Collected reports hidden from map after 7 days
 
@@ -29,16 +29,15 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 
 ### Groups & Events
 - Create/join cleanup groups
-- Create events within groups
+- Create events within groups with location field
 - Event deletion by creator, group admin, or app admin
 - Mock notifications for new events
 
 ## Gamification
 
 ### Point Values (Reduced)
-- **Report trash:** 5 points
-- **Collect trash (AI verified):** 25 points
-- **Collect trash (not verified):** 15 points
+- **Report trash:** 5 points (immediate)
+- **Collect trash:** 20 points (after admin approval)
 - **Area cleaning:** 2 points per 100m² (minimum 10)
 
 ### Medal Thresholds (Monthly)
@@ -49,7 +48,7 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - **Diamond:** 500 points
 
 ### Features
-- Weekly leaderboards for users and groups
+- Weekly leaderboards for users and groups (Top 10 only)
 - Animated medal cards with shimmer and glow effects
 - Progress bars showing progress to next medal
 - Social sharing for medals and achievements
@@ -58,12 +57,15 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - View/ban/unban users
 - Delete trash reports
 - Approve/reject area cleanings with point awards
+- Reset points for ANY user (including admin)
 
 ### Dashboard
 - Total points display
 - Berlin-wide weekly statistics
-- Upcoming group events
+- Upcoming group events with time badges (Today/Tomorrow)
 - Recent medals
+- Quick action buttons (Camera for fast reporting)
+- Contact footer with help email
 
 ## Technology Stack
 - **Frontend**: React, Tailwind CSS, Leaflet.js
@@ -73,7 +75,7 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - **AI**: OpenAI Vision via Emergent LLM Key
 - **Auth**: Google OAuth via Emergent
 
-## What's Been Implemented (as of 2026-01-22)
+## What's Been Implemented (as of 2026-01-23)
 
 ### Completed Features
 - [x] Google OAuth authentication
@@ -84,18 +86,33 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - [x] Points system (total, monthly, weekly)
 - [x] Medal system based on monthly points
 - [x] Groups with join/leave/create
-- [x] Group events with create/delete
-- [x] Weekly leaderboards (users & groups)
+- [x] Group events with create/delete and location field
+- [x] Weekly leaderboards (users & groups) - Top 10 only
 - [x] Heatmap layer for trash density
 - [x] Admin panel with user management
 - [x] Admin can delete trash reports
 - [x] Admin can approve/reject area cleanings
 - [x] Dashboard with weekly Berlin stats
-- [x] Dashboard shows upcoming group events
+- [x] Dashboard shows upcoming group events with time badges
 - [x] Social sharing for medals
 - [x] User profile with medals display
 - [x] Notification preferences (mock implementation)
 - [x] Auto-cleanup of old collected reports (7 days)
+
+### New Features (2026-01-23)
+- [x] **Language Support (EN/DE)** - Auto-detect from browser, manual toggle in settings
+- [x] **Profile Edit** - Users can change name and profile picture
+- [x] **PWA Install Popup** - Shows on first login explaining how to add to home screen
+- [x] **Blue Trash Icon** - Changed from red to blue for better visibility
+- [x] **Camera-First Reporting** - Dashboard quick action opens camera directly
+- [x] **Top 10 Rankings** - Leaderboards limited to top 10 users/groups
+- [x] **Banned Users Excluded** - Banned users hidden from rankings
+- [x] **Contact Footer** - Contact & Help section on dashboard
+- [x] **Event Time Badges** - Today/Tomorrow/In X days badges on events
+- [x] **Event Location Field** - Add location name when creating events
+- [x] **Events Link to Groups** - Dashboard events navigate to their group
+- [x] **Floating Report Button** - Blue floating button on map for quick reporting
+- [x] **Admin Reset Points for All** - Can reset points for any user including admin
 
 ### Fixed Issues (2026-01-22)
 - [x] Issue 1: Admin rights not visible - Fixed `is_admin` flag in database
@@ -111,7 +128,7 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - [x] Admin panel shows pending verifications with notification badge
 - [x] Ban/unban user functionality working
 - [x] Test data filtered from frontend map (placeholder/test images hidden)
-- [x] Points scaled back (Report: 5, Collect: 15-25, Area: 2/100m²)
+- [x] Points scaled back (Report: 5, Collect: 20, Area: 2/100m²)
 - [x] Admin can reset user points via modal
 - [x] Beautiful animated medals with shimmer/glow effects
 
