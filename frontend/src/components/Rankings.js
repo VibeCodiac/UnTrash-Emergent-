@@ -48,7 +48,7 @@ function Rankings() {
           >
             <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
           </button>
-          <h1 className="text-xl md:text-3xl font-bold text-gray-900">Weekly Rankings</h1>
+          <h1 className="text-xl md:text-3xl font-bold text-gray-900">Weekly Rankings - Top 10</h1>
         </div>
 
         {/* Tabs */}
