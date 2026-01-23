@@ -842,10 +842,13 @@ async def delete_group_event(request: Request, group_id: str, event_id: str):
 # ==================== RANKINGS ENDPOINTS ====================
 
 @api_router.get("/rankings/weekly/users")
-async def get_weekly_user_rankings(limit: int = 50):
-    """Get weekly user rankings"""
+async def get_weekly_user_rankings(limit: int = 10):
+    """Get weekly user rankings (top 10, excludes banned users and test accounts)"""
     users = await db.users.find(
-        {},
+        {
+            "is_banned": {"$ne": True},
+            "email": {"$not": {"$regex": "(test|example\\.com)", "$options": "i"}}
+        },
         {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "weekly_points": 1}
     ).sort("weekly_points", -1).limit(limit).to_list(limit)
     return users
