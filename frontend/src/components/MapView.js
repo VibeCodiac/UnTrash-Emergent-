@@ -579,19 +579,27 @@ function ShareSuccessModal({ points, onClose }) {
   );
 }
 
-function ReportTrashModal({ onClose, onSubmit, loading, getCurrentLocation, userLocation, locationError, gettingLocation }) {
+function ReportTrashModal({ onClose, onSubmit, loading, getCurrentLocation, userLocation, locationError, gettingLocation, autoOpenCamera }) {
   const [location, setLocation] = useState(userLocation || { lat: 52.520008, lng: 13.404954, address: '' });
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [locationStatus, setLocationStatus] = useState(userLocation ? 'found' : 'pending');
+  const fileInputRef = useRef(null);
 
   // Auto-get location when modal opens
   useEffect(() => {
     if (!userLocation) {
       handleGetLocation();
     }
-  }, []);
+    
+    // Auto-trigger camera if coming from dashboard
+    if (autoOpenCamera && fileInputRef.current) {
+      setTimeout(() => {
+        fileInputRef.current?.click();
+      }, 500);
+    }
+  }, [autoOpenCamera]);
 
   const handleGetLocation = async () => {
     setLocationStatus('getting');
