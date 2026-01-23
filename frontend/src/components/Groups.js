@@ -442,12 +442,18 @@ function GroupDetailsModal({ group, onClose, isMember }) {
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900">{event.title}</h4>
                       {event.description && <p className="text-sm text-gray-600 mt-1">{event.description}</p>}
-                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-500">
                         <span className="flex items-center">
                           <Calendar className="w-4 h-4 mr-1" />
                           {new Date(event.event_date).toLocaleString()}
                         </span>
-                        {event.location && (
+                        {event.location_name && (
+                          <span className="flex items-center text-blue-600">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            {event.location_name}
+                          </span>
+                        )}
+                        {!event.location_name && event.location && (
                           <span className="flex items-center">
                             <MapPin className="w-4 h-4 mr-1" />
                             Location set
