@@ -488,6 +488,7 @@ function CreateEventForm({ onClose, onCreate }) {
   const [description, setDescription] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [location, setLocation] = useState({ lat: 52.520008, lng: 13.404954 });
+  const [locationName, setLocationName] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -495,7 +496,8 @@ function CreateEventForm({ onClose, onCreate }) {
       title,
       description,
       event_date: new Date(eventDate).toISOString(),
-      location
+      location,
+      location_name: locationName
     });
   };
 
@@ -531,6 +533,19 @@ function CreateEventForm({ onClose, onCreate }) {
               onChange={(e) => setEventDate(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
               required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <MapPin className="w-4 h-4 inline mr-1" />
+              Location (Address or Place Name)
+            </label>
+            <input
+              type="text"
+              value={locationName}
+              onChange={(e) => setLocationName(e.target.value)}
+              placeholder="e.g., Mauerpark, Alexanderplatz, etc."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
           <div className="flex space-x-2">
