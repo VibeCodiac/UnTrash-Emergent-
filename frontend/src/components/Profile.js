@@ -1,25 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Award, Share2, CheckCircle, Sparkles } from 'lucide-react';
+import { ArrowLeft, Trophy, Award, Share2, CheckCircle, Sparkles, Users } from 'lucide-react';
+import axios from 'axios';
 
-// Medal thresholds (updated to match backend)
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+// Medal thresholds (updated to match backend - harder thresholds)
 const MEDAL_THRESHOLDS = {
-  bronze: 30,
-  silver: 75,
-  gold: 150,
-  platinum: 300,
-  diamond: 500
+  bronze: 50,
+  silver: 100,
+  gold: 250,
+  platinum: 500,
+  diamond: 1000
 };
 
 function Profile({ user }) {
   const navigate = useNavigate();
   const [shareStatus, setShareStatus] = useState(null);
   const [newMedalAnimation, setNewMedalAnimation] = useState(null);
+  const [userGroups, setUserGroups] = useState([]);
 
   const medals = user?.medals || {};
   const allMedals = Object.entries(medals).flatMap(([month, medalList]) =>
     medalList.map((medal) => ({ month, medal }))
   );
+
+  // Load user's groups
+  useEffect(() => {
+    if (user?.joined_groups?.length > 0) {
+      loadUserGroups();
+    }
+  }, [user?.joined_groups]);
+
+  const loadUserGroups = async () => {
+    try {
+      const response = await axios.get(`${API}/groups`, { withCredentials: true });
+      const myGroups = response.data.filter(g => user.joined_groups.includes(g.group_id));
+      setUserGroups(myGroups);
+    } catch (error) {
+      console.error('Error loading groups:', error);
+    }
+  };
 
   // Check for new medal achievement
   useEffect(() => {
