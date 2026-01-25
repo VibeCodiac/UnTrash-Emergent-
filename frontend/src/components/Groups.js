@@ -124,10 +124,6 @@ function Groups({ user }) {
       await axios.delete(`${API}/groups/${groupId}`, {
         withCredentials: true
       });
-      if (primeGroupId === groupId) {
-        localStorage.removeItem('prime_group_id');
-        setPrimeGroupId(null);
-      }
       loadGroups();
       window.location.reload();
     } catch (error) {
