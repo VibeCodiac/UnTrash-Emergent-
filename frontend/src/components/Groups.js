@@ -17,24 +17,11 @@ function Groups({ user }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [primeGroupId, setPrimeGroupId] = useState(localStorage.getItem('prime_group_id') || null);
 
   useEffect(() => {
     loadGroups();
-    loadPrimeGroupFromBackend();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const loadPrimeGroupFromBackend = async () => {
-    try {
-      const response = await axios.get(`${API}/users/profile`, { withCredentials: true });
-      if (response.data?.prime_group_id) {
-        setPrimeGroupId(response.data.prime_group_id);
-        localStorage.setItem('prime_group_id', response.data.prime_group_id);
-      }
-    } catch (error) {
-      console.error('Error loading prime group from backend:', error);
-    }
-  };
 
   // Handle navigation state to open specific group
   useEffect(() => {
@@ -81,30 +68,6 @@ function Groups({ user }) {
       }
     } catch (error) {
       console.error('Error loading events for group:', groupId);
-    }
-  };
-
-  const handleSetPrimeGroup = async (groupId) => {
-    if (primeGroupId === groupId) {
-      // Unset prime group
-      localStorage.removeItem('prime_group_id');
-      setPrimeGroupId(null);
-      // Also update backend
-      try {
-        await axios.put(`${API}/users/profile`, { prime_group_id: null }, { withCredentials: true });
-      } catch (error) {
-        console.error('Error unsetting prime group:', error);
-      }
-    } else {
-      // Set as prime group
-      localStorage.setItem('prime_group_id', groupId);
-      setPrimeGroupId(groupId);
-      // Also update backend
-      try {
-        await axios.put(`${API}/users/profile`, { prime_group_id: groupId }, { withCredentials: true });
-      } catch (error) {
-        console.error('Error setting prime group:', error);
-      }
     }
   };
 
