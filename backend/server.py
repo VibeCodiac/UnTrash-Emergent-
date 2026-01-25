@@ -113,6 +113,9 @@ class Group(BaseModel):
     group_id: str = Field(default_factory=lambda: f"group_{uuid.uuid4().hex[:12]}")
     name: str
     description: Optional[str] = None
+    picture: Optional[str] = None  # Group picture URL
+    website_url: Optional[str] = None  # Optional external website link
+    chat_url: Optional[str] = None  # Optional chat room link (Telegram, Discord, etc.)
     admin_ids: List[str]
     member_ids: List[str] = Field(default_factory=list)
     total_points: int = 0
@@ -636,6 +639,9 @@ async def create_group(request: Request, data: dict):
     group = Group(
         name=data["name"],
         description=data.get("description"),
+        picture=data.get("picture"),
+        website_url=data.get("website_url"),
+        chat_url=data.get("chat_url"),
         admin_ids=[user.user_id],
         member_ids=[user.user_id]
     )
@@ -649,6 +655,39 @@ async def create_group(request: Request, data: dict):
     )
     
     return group
+
+@api_router.put("/groups/{group_id}")
+async def update_group(request: Request, group_id: str, data: dict):
+    """Update group details (admin only)"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if user is group admin or app admin
+    is_group_admin = user.user_id in group.get("admin_ids", [])
+    is_app_admin = user.is_admin
+    
+    if not (is_group_admin or is_app_admin):
+        raise HTTPException(status_code=403, detail="Not authorized to update this group")
+    
+    update_fields = {}
+    allowed_fields = ["name", "description", "picture", "website_url", "chat_url"]
+    for field in allowed_fields:
+        if field in data:
+            update_fields[field] = data[field]
+    
+    if update_fields:
+        await db.groups.update_one(
+            {"group_id": group_id},
+            {"$set": update_fields}
+        )
+    
+    updated_group = await db.groups.find_one({"group_id": group_id}, {"_id": 0})
+    return updated_group
 
 @api_router.get("/groups")
 async def list_groups(limit: int = 50):
@@ -845,14 +884,27 @@ async def delete_group_event(request: Request, group_id: str, event_id: str):
 
 @api_router.get("/rankings/weekly/users")
 async def get_weekly_user_rankings(limit: int = 10):
-    """Get weekly user rankings (top 10, excludes banned users and test accounts)"""
+    """Get weekly user rankings (top 10, excludes banned users, test accounts, and users with 0 points)"""
     users = await db.users.find(
         {
             "is_banned": {"$ne": True},
+            "weekly_points": {"$gt": 0},
             "email": {"$not": {"$regex": "(test|example\\.com)", "$options": "i"}}
         },
-        {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "weekly_points": 1}
+        {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "weekly_points": 1, "joined_groups": 1}
     ).sort("weekly_points", -1).limit(limit).to_list(limit)
+    
+    # Add group info for each user
+    for user in users:
+        if user.get("joined_groups"):
+            groups = await db.groups.find(
+                {"group_id": {"$in": user["joined_groups"]}},
+                {"_id": 0, "group_id": 1, "name": 1, "picture": 1}
+            ).to_list(10)
+            user["groups"] = groups
+        else:
+            user["groups"] = []
+    
     return users
 
 @api_router.get("/rankings/weekly/groups")

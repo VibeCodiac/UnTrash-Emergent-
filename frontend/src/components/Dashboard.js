@@ -58,26 +58,15 @@ function PWAInstallPopup({ onClose, onDontShowAgain, t }) {
 function ContactFooter({ t }) {
   return (
     <div className="bg-white rounded-xl shadow-lg p-4 mt-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-            <Mail className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900">{t('contact_help')}</h3>
-            <p className="text-xs text-gray-600">{t('questions_feedback')}</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-center">
         <a
           href="mailto:stephanj.thurm@gmail.com"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
           data-testid="contact-button"
         >
-          {t('contact_us')}
+          <Mail className="w-5 h-5" />
+          <span>Support</span>
         </a>
-      </div>
-      <div className="mt-3 pt-3 border-t border-gray-100 text-center">
-        <p className="text-xs text-gray-500">Stephan Thurm • stephanj.thurm@gmail.com</p>
       </div>
     </div>
   );
