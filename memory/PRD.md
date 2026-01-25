@@ -107,7 +107,7 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
   - Respects user preferences (notify_new_events toggle)
 - [x] **Notification Management** - Mark as read, unread count badge
 - [x] **Contact Footer Simplified** - Shows only "Support" button
-- [x] **Events Editable** - Event creators can edit their events
+- [x] **Events Editable** - Event creators can edit their events via `PUT /api/groups/{group_id}/events/{event_id}`
 - [x] **Group Pictures & Links** - Groups can have picture, website URL, chat room links
 - [x] **Area Cleanup GPS** - Auto-detects location like trash reporting
 - [x] **10-Day Visibility** - Cleaned trash and areas visible for 10 days (extended from 7)
@@ -116,6 +116,12 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - [x] **Harder Medal Thresholds** - Bronze: 50, Silver: 100, Gold: 250, Platinum: 500, Diamond: 1000
 - [x] **Group Badges in Rankings** - User's groups shown as clickable badges
 - [x] **Profile Shows Groups** - My Groups section with clickable group badges
+- [x] **Prime Group Feature** - Users can set a "Prime Group" displayed on Dashboard
+  - Star button on group cards to set/unset prime group
+  - Backend `PUT /api/users/profile` accepts `prime_group_id`
+  - Validates user must be a member of the group
+  - Dashboard shows prime group card with next upcoming event
+  - Data syncs between localStorage and backend
 
 ### Fixed Issues (2026-01-22)
 - [x] Issue 1: Admin rights not visible - Fixed `is_admin` flag in database
@@ -197,6 +203,7 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
   "weekly_points": 0,
   "medals": {"2026-01": ["bronze", "silver"]},
   "joined_groups": ["group_xxx"],
+  "prime_group_id": "group_xxx",
   "is_admin": false,
   "is_banned": false,
   "created_at": "datetime"
@@ -270,8 +277,7 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 All critical issues have been resolved.
 
 ### P1 - High Priority
-- [ ] Implement real email notifications (replace mock)
-- [ ] Implement push notifications (replace mock)
+- [ ] Group Interaction Improvements - Brainstorm and propose new ways for groups to interact (group-specific challenges, shared gallery)
 
 ### P2 - Medium Priority
 - [ ] Refine heatmap visualization based on feedback
