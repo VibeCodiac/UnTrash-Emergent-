@@ -1006,7 +1006,7 @@ async def get_user_by_id(user_id: str):
 
 @api_router.put("/users/profile")
 async def update_user_profile(request: Request, data: dict):
-    """Update user profile (name and picture)"""
+    """Update user profile (name, picture, and prime_group_id)"""
     user = await get_user_from_session(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -1014,12 +1014,21 @@ async def update_user_profile(request: Request, data: dict):
     update_fields = {}
     
     # Allow updating name
-    if "name" in data and data["name"].strip():
+    if "name" in data and data["name"] and data["name"].strip():
         update_fields["name"] = data["name"].strip()[:100]  # Limit name length
     
     # Allow updating picture URL
     if "picture" in data and data["picture"]:
         update_fields["picture"] = data["picture"]
+    
+    # Handle prime_group_id - can be set to a group ID or null to clear
+    if "prime_group_id" in data:
+        prime_group_id = data["prime_group_id"]
+        # Validate that the user is a member of the group (if not null)
+        if prime_group_id:
+            if prime_group_id not in (user.joined_groups or []):
+                raise HTTPException(status_code=400, detail="You must be a member of the group to set it as prime")
+        update_fields["prime_group_id"] = prime_group_id
     
     if not update_fields:
         raise HTTPException(status_code=400, detail="No valid fields to update")
