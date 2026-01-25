@@ -531,20 +531,20 @@ function GroupDetailsModal({ group, onClose, isMember, currentUser, onGroupUpdat
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-2xl sm:mx-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto animate-slide-up sm:animate-none">
         <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             {group.picture ? (
-              <img src={group.picture} alt={group.name} className="w-16 h-16 rounded-full object-cover" />
+              <img src={group.picture} alt={group.name} className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover" />
             ) : (
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-                <Users className="w-8 h-8 text-purple-600" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-100 rounded-full flex items-center justify-center">
+                <Users className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
               </div>
             )}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">{group.name}</h2>
-              <p className="text-sm text-gray-600">{group.member_ids?.length || 0} members</p>
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-900">{group.name}</h2>
+              <p className="text-xs sm:text-sm text-gray-600">{group.member_ids?.length || 0} members</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -557,28 +557,28 @@ function GroupDetailsModal({ group, onClose, isMember, currentUser, onGroupUpdat
                 <Edit2 className="w-5 h-5" />
               </button>
             )}
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1">
               <X className="w-6 h-6" />
             </button>
           </div>
         </div>
 
         {group.description && (
-          <p className="text-gray-600 mb-4">{group.description}</p>
+          <p className="text-sm sm:text-base text-gray-600 mb-4">{group.description}</p>
         )}
 
         {/* External Links */}
         {(group.website_url || group.chat_url) && (
-          <div className="flex flex-wrap gap-3 mb-4">
+          <div className="flex flex-wrap gap-2 sm:gap-3 mb-4">
             {group.website_url && (
               <a
                 href={group.website_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-sm"
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-xs sm:text-sm"
               >
                 <ExternalLink className="w-4 h-4" />
-                <span>Visit Website</span>
+                <span>Website</span>
               </a>
             )}
             {group.chat_url && (
@@ -586,33 +586,33 @@ function GroupDetailsModal({ group, onClose, isMember, currentUser, onGroupUpdat
                 href={group.chat_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 text-sm"
+                className="flex items-center space-x-2 px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 text-xs sm:text-sm"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>Join Chat</span>
+                <span>Chat</span>
               </a>
             )}
           </div>
         )}
 
-        <div className="flex items-center justify-between text-sm text-gray-600 mb-6 p-3 bg-gray-50 rounded-lg">
-          <span>Total Points: <strong>{group.total_points || 0}</strong></span>
-          <span>Weekly Points: <strong>{group.weekly_points || 0}</strong></span>
+        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 p-3 bg-gray-50 rounded-lg">
+          <span>Total: <strong>{group.total_points || 0}</strong> pts</span>
+          <span>Weekly: <strong>{group.weekly_points || 0}</strong> pts</span>
         </div>
 
         {/* Members Preview */}
         {members.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Members</h3>
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-3">Members</h3>
             <div className="flex flex-wrap gap-2">
               {members.map((member) => (
-                <div key={member.user_id} className="flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1">
-                  <img src={member.picture} alt={member.name} className="w-6 h-6 rounded-full" />
-                  <span className="text-sm text-gray-700">{member.name}</span>
+                <div key={member.user_id} className="flex items-center space-x-2 bg-gray-100 rounded-full px-2 sm:px-3 py-1">
+                  <img src={member.picture} alt={member.name} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full" />
+                  <span className="text-xs sm:text-sm text-gray-700">{member.name}</span>
                 </div>
               ))}
               {group.member_ids?.length > 10 && (
-                <span className="text-sm text-gray-500 px-3 py-1">+{group.member_ids.length - 10} more</span>
+                <span className="text-xs sm:text-sm text-gray-500 px-3 py-1">+{group.member_ids.length - 10} more</span>
               )}
             </div>
           </div>
