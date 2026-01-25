@@ -35,17 +35,17 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 
 ## Gamification
 
-### Point Values (Reduced)
-- **Report trash:** 5 points (immediate)
-- **Collect trash:** 20 points (after admin approval)
-- **Area cleaning:** 2 points per 100m² (minimum 10)
+### Point Values (Harder to Get - Expanded Scale)
+- **Report trash:** 2 points (immediate)
+- **Collect trash:** 10 points (after admin approval)
+- **Area cleaning:** 1 point per 100m² (minimum 5, after admin approval)
 
-### Medal Thresholds (Monthly)
-- **Bronze:** 30 points
-- **Silver:** 75 points
-- **Gold:** 150 points
-- **Platinum:** 300 points
-- **Diamond:** 500 points
+### Medal Thresholds (Monthly - Harder)
+- **Bronze:** 50 points
+- **Silver:** 100 points
+- **Gold:** 250 points
+- **Platinum:** 500 points
+- **Diamond:** 1000 points
 
 ### Features
 - Weekly leaderboards for users and groups (Top 10 only)
