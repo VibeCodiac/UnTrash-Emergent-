@@ -1529,30 +1529,141 @@ async def update_notification_settings(request: Request, preferences: dict):
 
 @api_router.get("/notifications/mock")
 async def get_mock_notifications(request: Request, limit: int = 20):
-    """Get mock notification log for testing"""
+    """Get notification log for user"""
     user = await get_user_from_session(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    notifications = await db.mock_notifications.find(
+    notifications = await db.notifications.find(
         {"user_id": user.user_id},
         {"_id": 0}
     ).sort("created_at", -1).limit(limit).to_list(limit)
     
     return notifications
 
-async def send_mock_notification(user_id: str, notification_type: str, title: str, message: str):
-    """Log a mock notification (simulates sending)"""
+@api_router.post("/notifications/subscribe")
+async def subscribe_to_notifications(request: Request, data: dict):
+    """Subscribe user to push notifications"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    subscription = NotificationSubscription(
+        user_id=user.user_id,
+        subscription_data=data.get("subscription"),
+        device_type=data.get("device_type"),
+        enabled=True
+    )
+    
+    await db.notification_subscriptions.update_one(
+        {"user_id": user.user_id},
+        {"$set": subscription.model_dump()},
+        upsert=True
+    )
+    
+    return {"message": "Subscribed to notifications", "enabled": True}
+
+@api_router.post("/notifications/unsubscribe")
+async def unsubscribe_from_notifications(request: Request):
+    """Unsubscribe user from push notifications"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    await db.notification_subscriptions.update_one(
+        {"user_id": user.user_id},
+        {"$set": {"enabled": False, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    return {"message": "Unsubscribed from notifications", "enabled": False}
+
+@api_router.get("/notifications/status")
+async def get_notification_status(request: Request):
+    """Get user's notification subscription status"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    subscription = await db.notification_subscriptions.find_one(
+        {"user_id": user.user_id},
+        {"_id": 0}
+    )
+    
+    return {
+        "subscribed": subscription is not None and subscription.get("enabled", False),
+        "device_type": subscription.get("device_type") if subscription else None
+    }
+
+@api_router.post("/notifications/mark-read")
+async def mark_notifications_read(request: Request, data: dict):
+    """Mark notifications as read"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    notification_ids = data.get("notification_ids", [])
+    if notification_ids:
+        await db.notifications.update_many(
+            {"user_id": user.user_id, "notification_id": {"$in": notification_ids}},
+            {"$set": {"read": True}}
+        )
+    else:
+        # Mark all as read
+        await db.notifications.update_many(
+            {"user_id": user.user_id},
+            {"$set": {"read": True}}
+        )
+    
+    return {"message": "Notifications marked as read"}
+
+@api_router.get("/notifications/unread-count")
+async def get_unread_notification_count(request: Request):
+    """Get count of unread notifications"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    count = await db.notifications.count_documents({
+        "user_id": user.user_id,
+        "read": False
+    })
+    
+    return {"unread_count": count}
+
+async def send_notification(user_id: str, notification_type: str, title: str, message: str, data: dict = None):
+    """Store notification in database for user to fetch"""
+    notification_id = f"notif_{uuid.uuid4().hex[:12]}"
     notification = {
+        "notification_id": notification_id,
         "user_id": user_id,
         "type": notification_type,
         "title": title,
         "message": message,
+        "data": data or {},
         "created_at": datetime.now(timezone.utc),
         "read": False
     }
-    await db.mock_notifications.insert_one(notification)
-    logger.info(f"Mock notification sent to {user_id}: {title}")
+    await db.notifications.insert_one(notification)
+    logger.info(f"Notification sent to {user_id}: {title}")
+    return notification_id
+
+async def notify_group_members(group_id: str, exclude_user_id: str, notification_type: str, title: str, message: str, data: dict = None):
+    """Send notification to all group members except the sender"""
+    group = await db.groups.find_one({"group_id": group_id}, {"_id": 0, "member_ids": 1})
+    if not group:
+        return
+    
+    for member_id in group.get("member_ids", []):
+        if member_id != exclude_user_id:
+            # Check if user has notifications enabled
+            prefs = await db.notification_preferences.find_one({"user_id": member_id}, {"_id": 0})
+            if prefs and prefs.get("notify_new_events", True):
+                await send_notification(member_id, notification_type, title, message, data)
+
+# Legacy function name for backward compatibility
+async def send_mock_notification(user_id: str, notification_type: str, title: str, message: str):
+    """Store notification (legacy wrapper)"""
+    await send_notification(user_id, notification_type, title, message)
 
 # Include router
 app.include_router(api_router)
