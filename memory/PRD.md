@@ -99,20 +99,23 @@ Build a Progressive Web App called "UnTrash Berlin" - a community-driven platfor
 - [x] Notification preferences (mock implementation)
 - [x] Auto-cleanup of old collected reports (7 days)
 
-### New Features (2026-01-23)
-- [x] **Language Support (EN/DE)** - Auto-detect from browser, manual toggle in settings
-- [x] **Profile Edit** - Users can change name and profile picture
-- [x] **PWA Install Popup** - Shows on first login explaining how to add to home screen
-- [x] **Blue Trash Icon** - Changed from red to blue for better visibility
-- [x] **Camera-First Reporting** - Dashboard quick action opens camera directly
-- [x] **Top 10 Rankings** - Leaderboards limited to top 10 users/groups
-- [x] **Banned Users Excluded** - Banned users hidden from rankings
-- [x] **Contact Footer** - Contact & Help section on dashboard
-- [x] **Event Time Badges** - Today/Tomorrow/In X days badges on events
-- [x] **Event Location Field** - Add location name when creating events
-- [x] **Events Link to Groups** - Dashboard events navigate to their group
-- [x] **Floating Report Button** - Blue floating button on map for quick reporting
-- [x] **Admin Reset Points for All** - Can reset points for any user including admin
+### New Features (2026-01-25)
+- [x] **Real Push Notifications** - Browser-based push notifications for group events
+  - Service worker at `/sw.js` handles push events
+  - Enable/disable in Settings page
+  - Notifications stored in MongoDB `notifications` collection
+  - Respects user preferences (notify_new_events toggle)
+- [x] **Notification Management** - Mark as read, unread count badge
+- [x] **Contact Footer Simplified** - Shows only "Support" button
+- [x] **Events Editable** - Event creators can edit their events
+- [x] **Group Pictures & Links** - Groups can have picture, website URL, chat room links
+- [x] **Area Cleanup GPS** - Auto-detects location like trash reporting
+- [x] **10-Day Visibility** - Cleaned trash and areas visible for 10 days (extended from 7)
+- [x] **Rankings Exclude 0-Point Users** - Only active users appear
+- [x] **Harder Points System** - Report: 2pts, Collect: 10pts, Area: 1pt/100m²
+- [x] **Harder Medal Thresholds** - Bronze: 50, Silver: 100, Gold: 250, Platinum: 500, Diamond: 1000
+- [x] **Group Badges in Rankings** - User's groups shown as clickable badges
+- [x] **Profile Shows Groups** - My Groups section with clickable group badges
 
 ### Fixed Issues (2026-01-22)
 - [x] Issue 1: Admin rights not visible - Fixed `is_admin` flag in database
