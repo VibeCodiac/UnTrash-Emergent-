@@ -368,7 +368,6 @@ function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onView
               className="w-full text-red-600 hover:text-red-700 text-xs py-1 transition-colors disabled:text-gray-400"
               data-testid="leave-group-button"
             >
-            >
               Leave Group
             </button>
           )

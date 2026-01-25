@@ -64,6 +64,7 @@ class User(BaseModel):
     weekly_points: int = 0
     medals: Dict[str, List[str]] = Field(default_factory=dict)  # {"2025-01": ["bronze", "silver"]}
     joined_groups: List[str] = Field(default_factory=list)
+    prime_group_id: Optional[str] = None  # User's highlighted primary group
     is_admin: bool = False  # Admin flag
     is_banned: bool = False  # Banned flag
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
