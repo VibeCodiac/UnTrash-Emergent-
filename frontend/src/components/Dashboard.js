@@ -398,58 +398,56 @@ function Dashboard({ user }) {
           </div>
         </div>
 
-        {/* Prime Group Card */}
-        {primeGroup && (
-          <div 
-            className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl shadow-lg p-4 md:p-6 mb-4 md:mb-6 border border-yellow-200 cursor-pointer hover:shadow-xl transition-shadow"
-            onClick={() => navigate('/groups', { state: { openGroupId: primeGroup.group_id } })}
-            data-testid="prime-group-card"
-          >
-            <div className="flex items-center space-x-3 mb-3">
-              <span className="text-2xl">⭐</span>
-              <h2 className="text-lg md:text-xl font-bold text-gray-900">{t('my_prime_group') || 'My Prime Group'}</h2>
-            </div>
-            <div className="flex items-center space-x-4">
-              {primeGroup.picture ? (
-                <img src={primeGroup.picture} alt={primeGroup.name} className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-yellow-300" />
-              ) : (
-                <div className="w-14 h-14 md:w-16 md:h-16 bg-purple-100 rounded-full flex items-center justify-center border-2 border-yellow-300">
-                  <Users className="w-7 h-7 md:w-8 md:h-8 text-purple-600" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base md:text-lg font-bold text-gray-900 truncate">{primeGroup.name}</h3>
-                <p className="text-xs md:text-sm text-gray-600">{primeGroup.member_ids?.length || 0} {t('members') || 'members'}</p>
-                {primeGroup.description && (
-                  <p className="text-xs text-gray-500 line-clamp-1 mt-1">{primeGroup.description}</p>
-                )}
-              </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-lg md:text-xl font-bold text-amber-600">{primeGroup.total_points || 0}</p>
-                <p className="text-xs text-gray-500">{t('group_points') || 'points'}</p>
-              </div>
-            </div>
-            {primeGroupEvent && (
-              <div className="mt-4 pt-3 border-t border-yellow-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-900">{primeGroupEvent.title}</span>
-                    <EventTimeBadge eventDate={primeGroupEvent.event_date} t={t} />
+        {/* My Groups Section */}
+        {myGroups.length > 0 && (
+          <div className="mb-4 md:mb-6" data-testid="my-groups-section">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 flex items-center">
+              <Users className="w-5 h-5 md:w-6 md:h-6 mr-2 text-purple-600" />
+              {t('my_groups')}
+            </h2>
+            <div className="space-y-3">
+              {myGroups.map((group) => (
+                <div 
+                  key={group.group_id}
+                  className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow cursor-pointer"
+                  onClick={() => navigate('/groups', { state: { openGroupId: group.group_id } })}
+                  data-testid={`group-card-${group.group_id}`}
+                >
+                  <div className="flex items-center space-x-3">
+                    {group.picture ? (
+                      <img src={group.picture} alt={group.name} className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-purple-200" />
+                    ) : (
+                      <div className="w-12 h-12 md:w-14 md:h-14 bg-purple-100 rounded-full flex items-center justify-center border-2 border-purple-200">
+                        <Users className="w-6 h-6 md:w-7 md:h-7 text-purple-600" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base md:text-lg font-bold text-gray-900 truncate">{group.name}</h3>
+                      <p className="text-xs md:text-sm text-gray-600">{group.member_ids?.length || 0} {t('members') || 'members'} • {group.total_points || 0} {t('points') || 'pts'}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-blue-600">{new Date(primeGroupEvent.event_date).toLocaleDateString()}</p>
-                    <p className="text-xs text-gray-500">{new Date(primeGroupEvent.event_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                  </div>
+                  
+                  {/* Group's Upcoming Events */}
+                  {groupEvents[group.group_id]?.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                      {groupEvents[group.group_id].map((event) => (
+                        <div key={event.event_id} className="flex items-center justify-between bg-blue-50 rounded-lg p-2">
+                          <div className="flex items-center space-x-2 flex-1 min-w-0">
+                            <Calendar className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                            <span className="text-sm font-medium text-gray-900 truncate">{event.title}</span>
+                            <EventTimeBadge eventDate={event.event_date} t={t} />
+                          </div>
+                          <div className="text-right ml-2 flex-shrink-0">
+                            <p className="text-xs text-blue-600">{new Date(event.event_date).toLocaleDateString()}</p>
+                            <p className="text-xs text-gray-500">{new Date(event.event_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                {primeGroupEvent.location_name && (
-                  <p className="text-xs text-gray-500 mt-1 flex items-center">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    {primeGroupEvent.location_name}
-                  </p>
-                )}
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         )}
 
