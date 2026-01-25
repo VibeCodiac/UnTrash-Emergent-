@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Users, Plus, Calendar, MapPin, ArrowLeft, X, Trash2 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Users, Plus, Calendar, MapPin, ArrowLeft, X, Trash2, Camera, Link, MessageCircle, Edit2, ExternalLink } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+const CLOUDINARY_CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 function Groups({ user }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [groups, setGroups] = useState([]);
   const [myGroups, setMyGroups] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -17,6 +20,16 @@ function Groups({ user }) {
   useEffect(() => {
     loadGroups();
   }, []);
+
+  // Handle navigation state to open specific group
+  useEffect(() => {
+    if (location.state?.openGroupId && groups.length > 0) {
+      const group = groups.find(g => g.group_id === location.state.openGroupId);
+      if (group) {
+        setSelectedGroup(group);
+      }
+    }
+  }, [location.state, groups]);
 
   const loadGroups = async () => {
     try {
@@ -31,10 +44,10 @@ function Groups({ user }) {
     }
   };
 
-  const handleCreateGroup = async (name, description) => {
+  const handleCreateGroup = async (groupData) => {
     setLoading(true);
     try {
-      await axios.post(`${API}/groups`, { name, description }, {
+      await axios.post(`${API}/groups`, groupData, {
         withCredentials: true
       });
       setShowCreateModal(false);
@@ -53,7 +66,7 @@ function Groups({ user }) {
         withCredentials: true
       });
       loadGroups();
-      window.location.reload(); // Reload to update user's groups
+      window.location.reload();
     } catch (error) {
       alert(error.response?.data?.detail || 'Failed to join group');
     } finally {
@@ -93,7 +106,6 @@ function Groups({ user }) {
     }
   };
 
-  // Check if user is the owner of a group (first admin)
   const isGroupOwner = (group) => {
     return group.admin_ids && group.admin_ids[0] === user?.user_id;
   };
@@ -174,6 +186,8 @@ function Groups({ user }) {
           group={selectedGroup}
           onClose={() => setSelectedGroup(null)}
           isMember={(user?.joined_groups || []).includes(selectedGroup.group_id)}
+          currentUser={user}
+          onGroupUpdated={loadGroups}
         />
       )}
     </div>
@@ -184,9 +198,13 @@ function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onView
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow" data-testid="group-card">
       <div className="flex items-center space-x-3 mb-4">
-        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-          <Users className="w-6 h-6 text-purple-600" />
-        </div>
+        {group.picture ? (
+          <img src={group.picture} alt={group.name} className="w-12 h-12 rounded-full object-cover" />
+        ) : (
+          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+            <Users className="w-6 h-6 text-purple-600" />
+          </div>
+        )}
         <div className="flex-1">
           <div className="flex items-center space-x-2">
             <h3 className="text-lg font-bold text-gray-900">{group.name}</h3>
@@ -200,6 +218,34 @@ function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onView
 
       {group.description && (
         <p className="text-sm text-gray-600 mb-4 line-clamp-2">{group.description}</p>
+      )}
+
+      {/* External Links */}
+      {(group.website_url || group.chat_url) && (
+        <div className="flex space-x-2 mb-3">
+          {group.website_url && (
+            <a
+              href={group.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800"
+            >
+              <Link className="w-3 h-3" />
+              <span>Website</span>
+            </a>
+          )}
+          {group.chat_url && (
+            <a
+              href={group.chat_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1 text-xs text-green-600 hover:text-green-800"
+            >
+              <MessageCircle className="w-3 h-3" />
+              <span>Chat</span>
+            </a>
+          )}
+        </div>
       )}
 
       <div className="flex items-center justify-between mb-4">
@@ -254,19 +300,74 @@ function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onView
 function CreateGroupModal({ onClose, onCreate, loading }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [picture, setPicture] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [chatUrl, setChatUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const handlePictureUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'UnTrash');
+      formData.append('folder', 'untrash/groups');
+
+      const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData);
+      setPicture(response.data.secure_url);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onCreate(name, description);
+    onCreate({
+      name,
+      description,
+      picture,
+      website_url: websiteUrl || null,
+      chat_url: chatUrl || null
+    });
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Create New Group</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Group Picture */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Group Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Group Picture (optional)</label>
+            <div className="flex items-center space-x-4">
+              {picture ? (
+                <img src={picture} alt="Group" className="w-16 h-16 rounded-full object-cover" />
+              ) : (
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Users className="w-8 h-8 text-gray-400" />
+                </div>
+              )}
+              <label className="cursor-pointer bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 text-sm">
+                {uploading ? 'Uploading...' : 'Upload Photo'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePictureUpload}
+                  className="hidden"
+                  disabled={uploading}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Group Name *</label>
             <input
               type="text"
               value={name}
@@ -276,6 +377,7 @@ function CreateGroupModal({ onClose, onCreate, loading }) {
               required
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Description (optional)</label>
             <textarea
@@ -286,10 +388,39 @@ function CreateGroupModal({ onClose, onCreate, loading }) {
               data-testid="group-description-input"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Link className="w-4 h-4 inline mr-1" />
+              Website URL (optional)
+            </label>
+            <input
+              type="url"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+              placeholder="https://yourgroup.com"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <MessageCircle className="w-4 h-4 inline mr-1" />
+              Chat/Discord Link (optional)
+            </label>
+            <input
+              type="url"
+              value={chatUrl}
+              onChange={(e) => setChatUrl(e.target.value)}
+              placeholder="https://t.me/yourgroup or discord.gg/..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+
           <div className="flex space-x-3">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploading}
               className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
               data-testid="submit-create-group-button"
             >
@@ -309,40 +440,46 @@ function CreateGroupModal({ onClose, onCreate, loading }) {
   );
 }
 
-function GroupDetailsModal({ group, onClose, isMember }) {
+function GroupDetailsModal({ group, onClose, isMember, currentUser, onGroupUpdated }) {
   const [events, setEvents] = useState([]);
   const [members, setMembers] = useState([]);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [isAppAdmin, setIsAppAdmin] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [showEditGroup, setShowEditGroup] = useState(false);
 
-  const loadCurrentUser = async () => {
-    try {
-      const response = await axios.get(`${API}/auth/me`, { withCredentials: true });
-      setCurrentUserId(response.data.user_id);
-      setIsAppAdmin(response.data.is_admin || false);
-    } catch (error) {
-      console.error('Error loading current user:', error);
-    }
-  };
-
-  const loadGroupDetails = async () => {
-    try {
-      const [eventsRes, membersRes] = await Promise.all([
-        axios.get(`${API}/groups/${group.group_id}/events`, { withCredentials: true }),
-        axios.get(`${API}/groups/${group.group_id}/members`, { withCredentials: true })
-      ]);
-      setEvents(eventsRes.data);
-      setMembers(membersRes.data);
-    } catch (error) {
-      console.error('Error loading group details:', error);
-    }
-  };
+  const isGroupAdmin = group.admin_ids?.includes(currentUser?.user_id);
+  const isAppAdmin = currentUser?.is_admin;
+  const canDeleteEvents = isGroupAdmin || isAppAdmin;
 
   useEffect(() => {
-    loadGroupDetails();
-    loadCurrentUser();
+    loadEvents();
+    loadMembers();
   }, [group.group_id]);
+
+  const loadEvents = async () => {
+    try {
+      const response = await axios.get(`${API}/groups/${group.group_id}/events`, {
+        withCredentials: true
+      });
+      setEvents(response.data);
+    } catch (error) {
+      console.error('Error loading events:', error);
+    }
+  };
+
+  const loadMembers = async () => {
+    if (group.member_ids?.length > 0) {
+      try {
+        const memberPromises = group.member_ids.slice(0, 10).map(id =>
+          axios.get(`${API}/users/${id}`, { withCredentials: true }).catch(() => null)
+        );
+        const results = await Promise.all(memberPromises);
+        setMembers(results.filter(r => r?.data).map(r => r.data));
+      } catch (error) {
+        console.error('Error loading members:', error);
+      }
+    }
+  };
 
   const handleCreateEvent = async (eventData) => {
     try {
@@ -350,93 +487,158 @@ function GroupDetailsModal({ group, onClose, isMember }) {
         withCredentials: true
       });
       setShowCreateEvent(false);
-      loadGroupDetails();
+      loadEvents();
     } catch (error) {
       alert('Failed to create event');
     }
   };
 
+  const handleUpdateEvent = async (eventData) => {
+    try {
+      await axios.put(`${API}/groups/${group.group_id}/events/${editingEvent.event_id}`, eventData, {
+        withCredentials: true
+      });
+      setEditingEvent(null);
+      loadEvents();
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to update event');
+    }
+  };
+
   const handleDeleteEvent = async (eventId) => {
-    if (!window.confirm('Are you sure you want to delete this event?')) return;
+    if (!window.confirm('Delete this event?')) return;
     try {
       await axios.delete(`${API}/groups/${group.group_id}/events/${eventId}`, {
         withCredentials: true
       });
-      loadGroupDetails();
+      loadEvents();
     } catch (error) {
-      alert(error.response?.data?.detail || 'Failed to delete event');
+      alert('Failed to delete event');
     }
   };
 
-  const isGroupAdmin = currentUserId && group.admin_ids && group.admin_ids.includes(currentUserId);
-  const canDeleteEvents = isAppAdmin || isGroupAdmin;
+  const handleUpdateGroup = async (groupData) => {
+    try {
+      await axios.put(`${API}/groups/${group.group_id}`, groupData, {
+        withCredentials: true
+      });
+      setShowEditGroup(false);
+      onGroupUpdated();
+      onClose();
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to update group');
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 my-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">{group.name}</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            ×
-          </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center space-x-4">
+            {group.picture ? (
+              <img src={group.picture} alt={group.name} className="w-16 h-16 rounded-full object-cover" />
+            ) : (
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+                <Users className="w-8 h-8 text-purple-600" />
+              </div>
+            )}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{group.name}</h2>
+              <p className="text-sm text-gray-600">{group.member_ids?.length || 0} members</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            {(isGroupAdmin || isAppAdmin) && (
+              <button
+                onClick={() => setShowEditGroup(true)}
+                className="text-purple-600 hover:text-purple-800 p-2"
+                title="Edit Group"
+              >
+                <Edit2 className="w-5 h-5" />
+              </button>
+            )}
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         {group.description && (
-          <p className="text-gray-600 mb-6">{group.description}</p>
+          <p className="text-gray-600 mb-4">{group.description}</p>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-gray-900">{members.length}</div>
-            <div className="text-sm text-gray-600">Members</div>
+        {/* External Links */}
+        {(group.website_url || group.chat_url) && (
+          <div className="flex flex-wrap gap-3 mb-4">
+            {group.website_url && (
+              <a
+                href={group.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 text-sm"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>Visit Website</span>
+              </a>
+            )}
+            {group.chat_url && (
+              <a
+                href={group.chat_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 text-sm"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Join Chat</span>
+              </a>
+            )}
           </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-gray-900">{group.total_points || 0}</div>
-            <div className="text-sm text-gray-600">Total Points</div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-gray-900">{group.weekly_points || 0}</div>
-            <div className="text-sm text-gray-600">Weekly Points</div>
-          </div>
+        )}
+
+        <div className="flex items-center justify-between text-sm text-gray-600 mb-6 p-3 bg-gray-50 rounded-lg">
+          <span>Total Points: <strong>{group.total_points || 0}</strong></span>
+          <span>Weekly Points: <strong>{group.weekly_points || 0}</strong></span>
         </div>
 
-        {/* Members */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Members</h3>
-          <div className="space-y-2 max-h-40 overflow-y-auto">
-            {members.map((member) => (
-              <div key={member.user_id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
-                {member.picture && (
-                  <img src={member.picture} alt={member.name} className="w-10 h-10 rounded-full" />
-                )}
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{member.name}</p>
-                  <p className="text-sm text-gray-600">{member.total_points || 0} points</p>
+        {/* Members Preview */}
+        {members.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Members</h3>
+            <div className="flex flex-wrap gap-2">
+              {members.map((member) => (
+                <div key={member.user_id} className="flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1">
+                  <img src={member.picture} alt={member.name} className="w-6 h-6 rounded-full" />
+                  <span className="text-sm text-gray-700">{member.name}</span>
                 </div>
-              </div>
-            ))}
+              ))}
+              {group.member_ids?.length > 10 && (
+                <span className="text-sm text-gray-500 px-3 py-1">+{group.member_ids.length - 10} more</span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Events */}
         <div>
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-gray-900">Upcoming Events</h3>
             {isMember && (
               <button
                 onClick={() => setShowCreateEvent(true)}
-                className="text-sm bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700"
+                className="bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center space-x-1"
+                data-testid="create-event-button"
               >
-                Create Event
+                <Plus className="w-4 h-4" />
+                <span>Create Event</span>
               </button>
             )}
           </div>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {events.length === 0 ? (
-              <p className="text-gray-500 text-sm">No upcoming events</p>
-            ) : (
-              events.map((event) => (
+
+          {events.length === 0 ? (
+            <p className="text-gray-500 text-sm">No upcoming events</p>
+          ) : (
+            <div className="space-y-3">
+              {events.map((event) => (
                 <div key={event.event_id} className="p-3 bg-gray-50 rounded-lg relative">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -453,38 +655,62 @@ function GroupDetailsModal({ group, onClose, isMember }) {
                             {event.location_name}
                           </span>
                         )}
-                        {!event.location_name && event.location && (
-                          <span className="flex items-center">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            Location set
-                          </span>
-                        )}
                       </div>
                     </div>
-                    {(canDeleteEvents || currentUserId === event.created_by) && (
-                      <button
-                        onClick={() => handleDeleteEvent(event.event_id)}
-                        className="text-red-600 hover:text-red-800 ml-2"
-                        title="Delete event"
-                        data-testid={`delete-event-${event.event_id}`}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
+                    <div className="flex items-center space-x-1 ml-2">
+                      {/* Edit button - only for event creator */}
+                      {currentUser?.user_id === event.created_by && (
+                        <button
+                          onClick={() => setEditingEvent(event)}
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                          title="Edit event"
+                          data-testid={`edit-event-${event.event_id}`}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {/* Delete button - for admin, group admin, or creator */}
+                      {(canDeleteEvents || currentUser?.user_id === event.created_by) && (
+                        <button
+                          onClick={() => handleDeleteEvent(event.event_id)}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          title="Delete event"
+                          data-testid={`delete-event-${event.event_id}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
-
-        {showCreateEvent && (
-          <CreateEventForm
-            onClose={() => setShowCreateEvent(false)}
-            onCreate={handleCreateEvent}
-          />
-        )}
       </div>
+
+      {showCreateEvent && (
+        <CreateEventForm
+          onClose={() => setShowCreateEvent(false)}
+          onCreate={handleCreateEvent}
+        />
+      )}
+
+      {editingEvent && (
+        <EditEventForm
+          event={editingEvent}
+          onClose={() => setEditingEvent(null)}
+          onUpdate={handleUpdateEvent}
+        />
+      )}
+
+      {showEditGroup && (
+        <EditGroupModal
+          group={group}
+          onClose={() => setShowEditGroup(false)}
+          onUpdate={handleUpdateGroup}
+        />
+      )}
     </div>
   );
 }
@@ -493,7 +719,6 @@ function CreateEventForm({ onClose, onCreate }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [eventDate, setEventDate] = useState('');
-  const [location, setLocation] = useState({ lat: 52.520008, lng: 13.404954 });
   const [locationName, setLocationName] = useState('');
 
   const handleSubmit = (e) => {
@@ -502,18 +727,17 @@ function CreateEventForm({ onClose, onCreate }) {
       title,
       description,
       event_date: new Date(eventDate).toISOString(),
-      location,
       location_name: locationName
     });
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
       <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
         <h3 className="text-xl font-bold text-gray-900 mb-4">Create Event</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
             <input
               type="text"
               value={title}
@@ -532,7 +756,7 @@ function CreateEventForm({ onClose, onCreate }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time *</label>
             <input
               type="datetime-local"
               value={eventDate}
@@ -544,22 +768,248 @@ function CreateEventForm({ onClose, onCreate }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               <MapPin className="w-4 h-4 inline mr-1" />
-              Location (Address or Place Name)
+              Location
             </label>
             <input
               type="text"
               value={locationName}
               onChange={(e) => setLocationName(e.target.value)}
-              placeholder="e.g., Mauerpark, Alexanderplatz, etc."
+              placeholder="e.g., Mauerpark, Alexanderplatz"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 pt-2">
             <button
               type="submit"
               className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
             >
               Create
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function EditEventForm({ event, onClose, onUpdate }) {
+  const [title, setTitle] = useState(event.title || '');
+  const [description, setDescription] = useState(event.description || '');
+  const [eventDate, setEventDate] = useState(
+    event.event_date ? new Date(event.event_date).toISOString().slice(0, 16) : ''
+  );
+  const [locationName, setLocationName] = useState(event.location_name || '');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onUpdate({
+      title,
+      description,
+      event_date: new Date(eventDate).toISOString(),
+      location_name: locationName
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <h3 className="text-xl font-bold text-gray-900 mb-4">Edit Event</h3>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              rows="2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time *</label>
+            <input
+              type="datetime-local"
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <MapPin className="w-4 h-4 inline mr-1" />
+              Location
+            </label>
+            <input
+              type="text"
+              value={locationName}
+              onChange={(e) => setLocationName(e.target.value)}
+              placeholder="e.g., Mauerpark, Alexanderplatz"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+          <div className="flex space-x-2 pt-2">
+            <button
+              type="submit"
+              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
+            >
+              Save Changes
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function EditGroupModal({ group, onClose, onUpdate }) {
+  const [name, setName] = useState(group.name || '');
+  const [description, setDescription] = useState(group.description || '');
+  const [picture, setPicture] = useState(group.picture || '');
+  const [websiteUrl, setWebsiteUrl] = useState(group.website_url || '');
+  const [chatUrl, setChatUrl] = useState(group.chat_url || '');
+  const [uploading, setUploading] = useState(false);
+
+  const handlePictureUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'UnTrash');
+      formData.append('folder', 'untrash/groups');
+
+      const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData);
+      setPicture(response.data.secure_url);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onUpdate({
+      name,
+      description,
+      picture,
+      website_url: websiteUrl || null,
+      chat_url: chatUrl || null
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-xl font-bold text-gray-900 mb-4">Edit Group</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Group Picture */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Group Picture</label>
+            <div className="flex items-center space-x-4">
+              {picture ? (
+                <img src={picture} alt="Group" className="w-16 h-16 rounded-full object-cover" />
+              ) : (
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Users className="w-8 h-8 text-gray-400" />
+                </div>
+              )}
+              <label className="cursor-pointer bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 text-sm">
+                {uploading ? 'Uploading...' : 'Change Photo'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePictureUpload}
+                  className="hidden"
+                  disabled={uploading}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Group Name *</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              rows="3"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <Link className="w-4 h-4 inline mr-1" />
+              Website URL
+            </label>
+            <input
+              type="url"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+              placeholder="https://yourgroup.com"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <MessageCircle className="w-4 h-4 inline mr-1" />
+              Chat/Discord Link
+            </label>
+            <input
+              type="url"
+              value={chatUrl}
+              onChange={(e) => setChatUrl(e.target.value)}
+              placeholder="https://t.me/yourgroup"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+
+          <div className="flex space-x-2 pt-2">
+            <button
+              type="submit"
+              disabled={uploading}
+              className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm disabled:bg-gray-400"
+            >
+              Save Changes
             </button>
             <button
               type="button"
