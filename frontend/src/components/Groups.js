@@ -926,9 +926,9 @@ function EditGroupModal({ group, onClose, onUpdate }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Edit Group</h3>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-[60] p-0 sm:p-4 animate-fade-in">
+      <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md sm:mx-4 max-h-[85vh] overflow-y-auto animate-slide-up sm:animate-scale-in pb-safe">
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Edit Group</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Group Picture */}
           <div>
