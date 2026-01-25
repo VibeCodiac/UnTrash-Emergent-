@@ -98,13 +98,13 @@ function Dashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showPWAPopup, setShowPWAPopup] = useState(false);
-  const [primeGroup, setPrimeGroup] = useState(null);
-  const [primeGroupEvent, setPrimeGroupEvent] = useState(null);
+  const [myGroups, setMyGroups] = useState([]);
+  const [groupEvents, setGroupEvents] = useState({});
 
   useEffect(() => {
     loadWeeklyStats();
     loadUpcomingEvents();
-    loadPrimeGroup();
+    loadMyGroups();
     if (user?.is_admin) {
       loadPendingCount();
     }
@@ -147,52 +147,41 @@ function Dashboard({ user }) {
     }
   };
 
-  const loadPrimeGroup = async () => {
+  const loadMyGroups = async () => {
+    if (!user?.joined_groups?.length) return;
+    
     try {
-      // First, get user profile to check for prime_group_id from backend
-      const userResponse = await fetch(`${API}/users/profile`, {
+      const response = await fetch(`${API}/groups`, {
         credentials: 'include'
       });
       
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        const primeGroupId = userData.prime_group_id || localStorage.getItem('prime_group_id');
+      if (response.ok) {
+        const allGroups = await response.json();
+        const userGroups = allGroups.filter(g => user.joined_groups.includes(g.group_id));
+        setMyGroups(userGroups);
         
-        if (!primeGroupId) return;
-        
-        // Sync localStorage with backend
-        if (userData.prime_group_id) {
-          localStorage.setItem('prime_group_id', userData.prime_group_id);
-        }
-        
-        // Get the group details
-        const groupResponse = await fetch(`${API}/groups/${primeGroupId}`, {
-          credentials: 'include'
-        });
-        
-        if (groupResponse.ok) {
-          const prime = await groupResponse.json();
-          setPrimeGroup(prime);
-          
-          // Load latest event for prime group
-          const eventsResponse = await fetch(`${API}/groups/${primeGroupId}/events`, {
+        // Load upcoming events for each group
+        for (const group of userGroups) {
+          const eventsResponse = await fetch(`${API}/groups/${group.group_id}/events`, {
             credentials: 'include'
           });
           if (eventsResponse.ok) {
             const events = await eventsResponse.json();
-            const futureEvents = events.filter(e => new Date(e.event_date) > new Date());
+            const futureEvents = events
+              .filter(e => new Date(e.event_date) > new Date())
+              .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
+              .slice(0, 2); // Get next 2 events per group
             if (futureEvents.length > 0) {
-              setPrimeGroupEvent(futureEvents[0]);
+              setGroupEvents(prev => ({
+                ...prev,
+                [group.group_id]: futureEvents
+              }));
             }
           }
-        } else {
-          // Group not found or user not a member anymore, clear prime group
-          localStorage.removeItem('prime_group_id');
-          setPrimeGroup(null);
         }
       }
     } catch (error) {
-      console.error('Error loading prime group:', error);
+      console.error('Error loading groups:', error);
     }
   };
 
