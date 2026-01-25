@@ -134,6 +134,15 @@ class GroupEvent(BaseModel):
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class NotificationSubscription(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    user_id: str
+    subscription_data: Optional[dict] = None  # Web Push subscription object
+    device_type: Optional[str] = None
+    enabled: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # ==================== HELPER FUNCTIONS ====================
 
 async def get_user_from_session(request: Request) -> Optional[User]:
