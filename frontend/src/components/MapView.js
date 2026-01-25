@@ -812,12 +812,7 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
   const [locationStatus, setLocationStatus] = useState('pending');
   const [locationError, setLocationError] = useState(null);
 
-  // Auto-get location when modal opens
-  useEffect(() => {
-    handleGetLocation();
-  }, []);
-
-  const handleGetLocation = () => {
+  const handleGetLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setLocationError('Geolocation not supported by your browser');
       setLocationStatus('error');
