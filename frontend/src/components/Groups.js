@@ -21,7 +21,20 @@ function Groups({ user }) {
 
   useEffect(() => {
     loadGroups();
+    loadPrimeGroupFromBackend();
   }, []);
+
+  const loadPrimeGroupFromBackend = async () => {
+    try {
+      const response = await axios.get(`${API}/users/profile`, { withCredentials: true });
+      if (response.data?.prime_group_id) {
+        setPrimeGroupId(response.data.prime_group_id);
+        localStorage.setItem('prime_group_id', response.data.prime_group_id);
+      }
+    } catch (error) {
+      console.error('Error loading prime group from backend:', error);
+    }
+  };
 
   // Handle navigation state to open specific group
   useEffect(() => {
