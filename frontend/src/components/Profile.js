@@ -184,6 +184,35 @@ function Profile({ user }) {
           </div>
         </div>
 
+        {/* My Groups Section */}
+        {userGroups.length > 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-4 md:mb-6">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <Users className="w-5 h-5 md:w-6 md:h-6 mr-2 text-purple-600" />
+              My Groups
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {userGroups.map((group) => (
+                <button
+                  key={group.group_id}
+                  onClick={() => navigate('/groups', { state: { openGroupId: group.group_id } })}
+                  className="flex items-center space-x-2 bg-purple-50 hover:bg-purple-100 rounded-full px-4 py-2 transition-colors"
+                  data-testid={`group-badge-${group.group_id}`}
+                >
+                  {group.picture ? (
+                    <img src={group.picture} alt={group.name} className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 bg-purple-200 rounded-full flex items-center justify-center">
+                      <Users className="w-4 h-4 text-purple-600" />
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-gray-800">{group.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Medal Collection */}
         <div className="bg-white rounded-xl shadow-lg p-4 md:p-8 mb-4 md:mb-6">
           <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-4 md:mb-6 flex items-center">
