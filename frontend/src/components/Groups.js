@@ -92,7 +92,9 @@ function Groups({ user }) {
       // Also update backend
       try {
         await axios.put(`${API}/users/profile`, { prime_group_id: null }, { withCredentials: true });
-      } catch (e) {}
+      } catch (error) {
+        console.error('Error unsetting prime group:', error);
+      }
     } else {
       // Set as prime group
       localStorage.setItem('prime_group_id', groupId);
@@ -100,7 +102,9 @@ function Groups({ user }) {
       // Also update backend
       try {
         await axios.put(`${API}/users/profile`, { prime_group_id: groupId }, { withCredentials: true });
-      } catch (e) {}
+      } catch (error) {
+        console.error('Error setting prime group:', error);
+      }
     }
   };
 
@@ -553,11 +557,6 @@ function GroupDetailsModal({ group, onClose, isMember, currentUser, onGroupUpdat
   const isAppAdmin = currentUser?.is_admin;
   const canDeleteEvents = isGroupAdmin || isAppAdmin;
 
-  useEffect(() => {
-    loadEvents();
-    loadMembers();
-  }, [group.group_id]);
-
   const loadEvents = async () => {
     try {
       const response = await axios.get(`${API}/groups/${group.group_id}/events`, {
@@ -582,6 +581,12 @@ function GroupDetailsModal({ group, onClose, isMember, currentUser, onGroupUpdat
       }
     }
   };
+
+  useEffect(() => {
+    loadEvents();
+    loadMembers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [group.group_id]);
 
   const handleCreateEvent = async (eventData) => {
     try {
