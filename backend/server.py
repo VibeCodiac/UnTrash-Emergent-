@@ -456,8 +456,8 @@ async def report_trash(request: Request, data: dict):
     # Verify trash in image (for reference, AI check)
     ai_verified = await verify_trash_in_image(data["image_url"])
     
-    # Award small points for reporting trash (encourages community participation)
-    report_points = 5
+    # Award small points for reporting trash (reduced - makes points harder to get)
+    report_points = 2
     
     report = TrashReport(
         location=Location(**data["location"]),
@@ -509,8 +509,8 @@ async def collect_trash(request: Request, report_id: str, data: dict):
     # Verify trash is gone using AI (for reference only, not for points)
     ai_verified = not await verify_trash_in_image(data["proof_image_url"])
     
-    # Fixed points for all collections - awarded after admin verification
-    points = 20
+    # Fixed points for all collections - awarded after admin verification (reduced)
+    points = 10
     
     await db.trash_reports.update_one(
         {"report_id": report_id},
@@ -541,8 +541,8 @@ async def list_trash_reports(
     """Get list of trash reports (excludes test data by default)"""
     from datetime import timedelta
     
-    # Calculate date 7 days ago
-    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    # Calculate date 10 days ago (extended from 7)
+    ten_days_ago = datetime.now(timezone.utc) - timedelta(days=10)
     
     # Build query
     query = {}
@@ -550,13 +550,13 @@ async def list_trash_reports(
     if status:
         query["status"] = status
     else:
-        # Default: Show all reported trash + collected trash from last 7 days
+        # Default: Show all reported trash + collected trash from last 10 days
         query = {
             "$or": [
                 {"status": "reported"},
                 {
                     "status": "collected",
-                    "collected_at": {"$gte": week_ago}
+                    "collected_at": {"$gte": ten_days_ago}
                 }
             ]
         }
@@ -587,12 +587,12 @@ async def clean_area(request: Request, data: dict):
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    # Calculate points based on area size (2 points per 100 sq meters, min 10)
+    # Calculate points based on area size (1 point per 100 sq meters, min 5) - harder to get
     area_size = data.get("area_size", 100)
-    points = max(10, int(area_size / 100 * 2))  # Reduced from 5 pts/100m², min 25
+    points = max(5, int(area_size / 100 * 1))  # Reduced from 2 pts/100m², min 10
     
-    # Area stays green for 7 days
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    # Area stays green for 10 days (extended from 7)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=10)
     
     area = AreaCleaning(
         user_id=user.user_id,
