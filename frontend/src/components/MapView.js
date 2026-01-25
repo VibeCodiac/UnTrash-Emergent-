@@ -808,6 +808,48 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [locationStatus, setLocationStatus] = useState('pending');
+  const [locationError, setLocationError] = useState(null);
+
+  // Auto-get location when modal opens
+  useEffect(() => {
+    handleGetLocation();
+  }, []);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation not supported by your browser');
+      setLocationStatus('error');
+      return;
+    }
+
+    setGettingLocation(true);
+    setLocationError(null);
+    setLocationStatus('getting');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCenterLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        setLocationStatus('found');
+        setGettingLocation(false);
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setLocationError('Could not get your location. Please enter manually.');
+        setLocationStatus('error');
+        setGettingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -821,7 +863,7 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', 'UnTrash'); // Your unsigned upload preset
+      formData.append('upload_preset', 'UnTrash');
       formData.append('folder', 'untrash/cleanings');
 
       const uploadResponse = await axios.post(
@@ -837,8 +879,7 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
   };
 
   const generatePolygon = (center, size) => {
-    // Create a square polygon around center point
-    const offset = Math.sqrt(size) / 111000; // Rough conversion to degrees
+    const offset = Math.sqrt(size) / 111000;
     return [
       [center.lat + offset, center.lng - offset],
       [center.lat + offset, center.lng + offset],
@@ -882,31 +923,78 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Location with GPS */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Center Location</label>
-            <input
-              type="number"
-              step="any"
-              placeholder="Latitude"
-              value={centerLocation.lat}
-              onChange={(e) => setCenterLocation({ ...centerLocation, lat: parseFloat(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
-              required
-            />
-            <input
-              type="number"
-              step="any"
-              placeholder="Longitude"
-              value={centerLocation.lng}
-              onChange={(e) => setCenterLocation({ ...centerLocation, lng: parseFloat(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              required
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Your Location</label>
+            
+            {/* Location Status */}
+            <div className="mb-3 p-3 rounded-lg bg-gray-50">
+              {locationStatus === 'getting' && (
+                <div className="flex items-center space-x-2 text-blue-600">
+                  <Loader className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Getting your location...</span>
+                </div>
+              )}
+              {locationStatus === 'found' && (
+                <div className="flex items-center space-x-2 text-green-600">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-sm">Location found!</span>
+                </div>
+              )}
+              {locationStatus === 'error' && (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-red-600">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-sm">{locationError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
+              {locationStatus === 'pending' && (
+                <button
+                  type="button"
+                  onClick={handleGetLocation}
+                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span className="text-sm">Get My Location</span>
+                </button>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-500 mb-2">Coordinates: {centerLocation.lat.toFixed(6)}, {centerLocation.lng.toFixed(6)}</p>
+            
+            <div className="flex space-x-2">
+              <input
+                type="number"
+                step="any"
+                placeholder="Latitude"
+                value={centerLocation.lat}
+                onChange={(e) => setCenterLocation({ ...centerLocation, lat: parseFloat(e.target.value) })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                required
+              />
+              <input
+                type="number"
+                step="any"
+                placeholder="Longitude"
+                value={centerLocation.lng}
+                onChange={(e) => setCenterLocation({ ...centerLocation, lng: parseFloat(e.target.value) })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                required
+              />
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Area Size: {areaSize} m² (Points: {Math.max(25, Math.floor(areaSize / 100 * 5))})
+              Area Size: {areaSize} m² (Points: {Math.max(5, Math.floor(areaSize / 100 * 1))})
             </label>
             <input
               type="range"
