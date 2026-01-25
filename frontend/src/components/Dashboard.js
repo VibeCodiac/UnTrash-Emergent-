@@ -563,58 +563,6 @@ function Dashboard({ user }) {
           </div>
         </div>
 
-        {/* Upcoming Events - Now links to groups */}
-        {upcomingEvents.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-4 md:mb-6" data-testid="upcoming-events-card">
-            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <Calendar className="w-5 h-5 md:w-6 md:h-6 mr-2 text-blue-600" />
-              {t('upcoming_events')}
-            </h2>
-            <div className="space-y-3">
-              {upcomingEvents.slice(0, 3).map((event) => (
-                <div
-                  key={event.event_id}
-                  onClick={() => navigate('/groups', { state: { openGroupId: event.group_id } })}
-                  className="flex items-center justify-between p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
-                  data-testid="upcoming-event-item"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <p className="font-semibold text-gray-900 text-sm md:text-base truncate">{event.title}</p>
-                      <EventTimeBadge eventDate={event.event_date} t={t} />
-                    </div>
-                    <p className="text-xs md:text-sm text-blue-600 hover:text-blue-700 truncate">
-                      📍 {event.group_name} →
-                    </p>
-                    {event.location_name && (
-                      <p className="text-xs text-gray-500 mt-1 truncate">
-                        <MapPin className="w-3 h-3 inline mr-1" />
-                        {event.location_name}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right ml-3 flex-shrink-0">
-                    <p className="text-xs md:text-sm font-medium text-blue-600">
-                      {new Date(event.event_date).toLocaleDateString()}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(event.event_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {upcomingEvents.length > 3 && (
-              <button
-                onClick={() => navigate('/groups')}
-                className="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                {t('view_all_events')} ({upcomingEvents.length}) →
-              </button>
-            )}
-          </div>
-        )}
-
         {/* Quick Actions Grid */}
         <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
           <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">{t('quick_actions')}</h2>
