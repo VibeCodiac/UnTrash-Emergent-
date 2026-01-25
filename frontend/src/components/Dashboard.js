@@ -148,18 +148,32 @@ function Dashboard({ user }) {
   };
 
   const loadPrimeGroup = async () => {
-    const primeGroupId = localStorage.getItem('prime_group_id');
-    if (!primeGroupId) return;
-    
     try {
-      const response = await fetch(`${API}/groups`, {
+      // First, get user profile to check for prime_group_id from backend
+      const userResponse = await fetch(`${API}/users/profile`, {
         credentials: 'include'
       });
-      if (response.ok) {
-        const groups = await response.json();
-        const prime = groups.find(g => g.group_id === primeGroupId);
-        if (prime) {
+      
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        const primeGroupId = userData.prime_group_id || localStorage.getItem('prime_group_id');
+        
+        if (!primeGroupId) return;
+        
+        // Sync localStorage with backend
+        if (userData.prime_group_id) {
+          localStorage.setItem('prime_group_id', userData.prime_group_id);
+        }
+        
+        // Get the group details
+        const groupResponse = await fetch(`${API}/groups/${primeGroupId}`, {
+          credentials: 'include'
+        });
+        
+        if (groupResponse.ok) {
+          const prime = await groupResponse.json();
           setPrimeGroup(prime);
+          
           // Load latest event for prime group
           const eventsResponse = await fetch(`${API}/groups/${primeGroupId}/events`, {
             credentials: 'include'
@@ -171,6 +185,10 @@ function Dashboard({ user }) {
               setPrimeGroupEvent(futureEvents[0]);
             }
           }
+        } else {
+          // Group not found or user not a member anymore, clear prime group
+          localStorage.removeItem('prime_group_id');
+          setPrimeGroup(null);
         }
       }
     } catch (error) {
