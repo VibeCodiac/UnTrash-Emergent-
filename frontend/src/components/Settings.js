@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, Mail, Smartphone, Save, CheckCircle, Info, User, Camera, Globe } from 'lucide-react';
+import { ArrowLeft, Bell, Mail, Smartphone, Save, CheckCircle, Info, User, Camera, Globe, BellOff, BellRing } from 'lucide-react';
 import axios from 'axios';
 import { useLanguage } from '../contexts/LanguageContext';
+import notificationService from '../services/NotificationService';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -19,10 +20,14 @@ function Settings({ user }) {
     notify_nearby_trash: false,
     notify_group_updates: true
   });
-  const [mockNotifications, setMockNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  
+  // Push notification state
+  const [pushStatus, setPushStatus] = useState('checking'); // checking, unsupported, denied, default, granted
+  const [subscribing, setSubscribing] = useState(false);
   
   // Profile edit state
   const [editingProfile, setEditingProfile] = useState(false);
@@ -33,12 +38,19 @@ function Settings({ user }) {
 
   useEffect(() => {
     loadSettings();
-    loadMockNotifications();
+    loadNotifications();
+    initPushNotifications();
     if (user) {
       setDisplayName(user.name || '');
       setProfilePicture(user.picture || '');
     }
   }, [user]);
+
+  const initPushNotifications = async () => {
+    await notificationService.init();
+    const permission = notificationService.getPermissionStatus();
+    setPushStatus(permission === 'unsupported' ? 'unsupported' : permission);
+  };
 
   const loadSettings = async () => {
     try {
@@ -53,12 +65,12 @@ function Settings({ user }) {
     }
   };
 
-  const loadMockNotifications = async () => {
+  const loadNotifications = async () => {
     try {
       const response = await axios.get(`${API}/notifications/mock`, {
         withCredentials: true
       });
-      setMockNotifications(response.data);
+      setNotifications(response.data);
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
@@ -81,6 +93,44 @@ function Settings({ user }) {
 
   const handleToggle = (key) => {
     setPreferences({ ...preferences, [key]: !preferences[key] });
+  };
+
+  const handleEnablePushNotifications = async () => {
+    setSubscribing(true);
+    try {
+      const result = await notificationService.requestPermission();
+      
+      if (result.success) {
+        // Subscribe to backend
+        await notificationService.subscribe(user?.user_id);
+        setPushStatus('granted');
+        setPreferences({ ...preferences, push_notifications: true });
+        
+        // Show test notification
+        await notificationService.showLocalNotification('Notifications Enabled! 🎉', {
+          body: 'You will now receive notifications for new events and updates.',
+          tag: 'welcome-notification'
+        });
+      } else {
+        setPushStatus(result.permission || 'denied');
+      }
+    } catch (error) {
+      console.error('Failed to enable notifications:', error);
+    } finally {
+      setSubscribing(false);
+    }
+  };
+
+  const handleDisablePushNotifications = async () => {
+    setSubscribing(true);
+    try {
+      await notificationService.unsubscribe(user?.user_id);
+      setPreferences({ ...preferences, push_notifications: false });
+    } catch (error) {
+      console.error('Failed to disable notifications:', error);
+    } finally {
+      setSubscribing(false);
+    }
   };
 
   const handlePictureChange = async (e) => {
@@ -121,13 +171,23 @@ function Settings({ user }) {
       setProfileSaved(true);
       setEditingProfile(false);
       setTimeout(() => setProfileSaved(false), 3000);
-      // Reload page to update user data
       window.location.reload();
     } catch (error) {
       console.error('Save profile error:', error);
       alert('Failed to save profile');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const markAllRead = async () => {
+    try {
+      await axios.post(`${API}/notifications/mark-read`, {}, {
+        withCredentials: true
+      });
+      loadNotifications();
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
     }
   };
 
@@ -213,7 +273,6 @@ function Settings({ user }) {
 
           {editingProfile ? (
             <div className="space-y-4">
-              {/* Profile Picture */}
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <img
@@ -238,7 +297,6 @@ function Settings({ user }) {
                 </div>
               </div>
 
-              {/* Display Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('display_name')}</label>
                 <input
@@ -293,6 +351,68 @@ function Settings({ user }) {
           )}
         </div>
 
+        {/* Push Notifications Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <BellRing className="w-6 h-6 text-orange-600" />
+            <h2 className="text-xl font-bold text-gray-900">{t('push_notifications')}</h2>
+          </div>
+
+          {pushStatus === 'unsupported' ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <Info className="w-5 h-5 text-gray-500 mt-0.5" />
+                <div className="text-sm text-gray-600">
+                  <p className="font-semibold mb-1">Push notifications not supported</p>
+                  <p>Your browser doesn't support push notifications. Try using Chrome, Firefox, or Edge.</p>
+                </div>
+              </div>
+            </div>
+          ) : pushStatus === 'denied' ? (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <BellOff className="w-5 h-5 text-red-500 mt-0.5" />
+                <div className="text-sm text-red-700">
+                  <p className="font-semibold mb-1">Notifications blocked</p>
+                  <p>You've blocked notifications. To enable them, click the lock icon in your browser's address bar and allow notifications.</p>
+                </div>
+              </div>
+            </div>
+          ) : pushStatus === 'granted' && preferences.push_notifications ? (
+            <div className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="text-green-800 font-medium">Notifications enabled</span>
+                  </div>
+                  <button
+                    onClick={handleDisablePushNotifications}
+                    disabled={subscribing}
+                    className="text-sm text-red-600 hover:text-red-700 font-medium"
+                  >
+                    {subscribing ? 'Disabling...' : 'Disable'}
+                  </button>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600">You'll receive notifications for new events in your groups.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">Enable push notifications to get instant updates about new events in your groups.</p>
+              <button
+                onClick={handleEnablePushNotifications}
+                disabled={subscribing}
+                className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors disabled:bg-gray-400"
+                data-testid="enable-push-button"
+              >
+                <Bell className="w-5 h-5" />
+                <span>{subscribing ? 'Enabling...' : 'Enable Push Notifications'}</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Notification Preferences */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-6">
@@ -321,65 +441,7 @@ function Settings({ user }) {
             </button>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start space-x-2">
-              <Info className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div className="text-sm text-blue-800">
-                <p className="font-semibold mb-1">{t('testing_mode')}</p>
-                <p>{t('notifications_simulated')}</p>
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-4">
-            {/* Email Notifications */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-gray-600" />
-                <div>
-                  <p className="font-medium text-gray-900">{t('email_notifications')}</p>
-                  <p className="text-sm text-gray-600">{t('receive_updates_email')}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => handleToggle('email_notifications')}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  preferences.email_notifications ? 'bg-green-600' : 'bg-gray-300'
-                }`}
-                data-testid="toggle-email"
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    preferences.email_notifications ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Push Notifications */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Smartphone className="w-5 h-5 text-gray-600" />
-                <div>
-                  <p className="font-medium text-gray-900">{t('push_notifications')}</p>
-                  <p className="text-sm text-gray-600">{t('browser_notifications')}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => handleToggle('push_notifications')}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  preferences.push_notifications ? 'bg-green-600' : 'bg-gray-300'
-                }`}
-                data-testid="toggle-push"
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    preferences.push_notifications ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-
             {/* New Events */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
@@ -447,11 +509,21 @@ function Settings({ user }) {
           </div>
         </div>
 
-        {/* Mock Notification Log */}
+        {/* Recent Notifications */}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">{t('recent_notifications')}</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">{t('recent_notifications')}</h2>
+            {notifications.length > 0 && (
+              <button
+                onClick={markAllRead}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                Mark all as read
+              </button>
+            )}
+          </div>
           
-          {mockNotifications.length === 0 ? (
+          {notifications.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
               <p>{t('no_notifications_yet')}</p>
@@ -459,10 +531,13 @@ function Settings({ user }) {
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {mockNotifications.map((notif, idx) => (
-                <div key={idx} className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              {notifications.map((notif, idx) => (
+                <div 
+                  key={notif.notification_id || idx} 
+                  className={`p-4 rounded-lg ${notif.read ? 'bg-gray-50' : 'bg-blue-50 border border-blue-200'}`}
+                >
                   <div className="flex items-start space-x-3">
-                    <Bell className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <Bell className={`w-5 h-5 mt-0.5 ${notif.read ? 'text-gray-400' : 'text-blue-600'}`} />
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900">{notif.title}</p>
                       <p className="text-sm text-gray-700 mt-1">{notif.message}</p>
@@ -470,6 +545,9 @@ function Settings({ user }) {
                         {new Date(notif.created_at).toLocaleString()}
                       </p>
                     </div>
+                    {!notif.read && (
+                      <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                    )}
                   </div>
                 </div>
               ))}
