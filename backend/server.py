@@ -616,11 +616,11 @@ async def clean_area(request: Request, data: dict):
 
 @api_router.get("/areas/active")
 async def get_active_areas():
-    """Get active cleaned areas (green zones) - only admin-approved"""
-    now = datetime.now(timezone.utc)
+    """Get active cleaned areas (green zones) - only admin-approved, visible for 10 days"""
+    ten_days_ago = datetime.now(timezone.utc) - timedelta(days=10)
     areas = await db.area_cleanings.find(
         {
-            "expires_at": {"$gt": now},
+            "created_at": {"$gte": ten_days_ago},
             "admin_approved": True  # Only show approved areas
         },
         {"_id": 0}
