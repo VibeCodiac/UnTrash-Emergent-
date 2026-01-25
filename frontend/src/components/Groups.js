@@ -222,9 +222,9 @@ function Groups({ user }) {
   );
 }
 
-function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onViewDetails, onSetPrime, isPrime, loading, latestEvent }) {
+function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onViewDetails, loading, latestEvent }) {
   return (
-    <div className={`bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow ${isPrime ? 'ring-2 ring-yellow-400' : ''}`} data-testid="group-card">
+    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow" data-testid="group-card">
       <div className="flex items-center space-x-3 mb-3">
         {group.picture ? (
           <img src={group.picture} alt={group.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover" />
@@ -236,7 +236,6 @@ function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onView
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2">
             <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">{group.name}</h3>
-            {isPrime && <span className="text-yellow-500 text-lg">⭐</span>}
             {isOwner && (
               <span className="text-xs bg-purple-600 text-white px-1.5 py-0.5 rounded flex-shrink-0">Owner</span>
             )}
@@ -301,29 +300,13 @@ function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onView
       </div>
 
       <div className="space-y-2">
-        <div className="flex space-x-2">
-          <button
-            onClick={onViewDetails}
-            className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm"
-            data-testid="view-group-details-button"
-          >
-            Details
-          </button>
-          {isMember && (
-            <button
-              onClick={onSetPrime}
-              className={`px-3 py-2 rounded-lg text-xs sm:text-sm transition-colors ${
-                isPrime 
-                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              title={isPrime ? 'Remove from dashboard' : 'Set as prime group'}
-              data-testid="set-prime-button"
-            >
-              {isPrime ? '⭐' : '☆'}
-            </button>
-          )}
-        </div>
+        <button
+          onClick={onViewDetails}
+          className="w-full bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm"
+          data-testid="view-group-details-button"
+        >
+          Details
+        </button>
         {isMember ? (
           isOwner ? (
             <button
