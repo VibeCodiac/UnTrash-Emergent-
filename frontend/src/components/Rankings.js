@@ -105,6 +105,8 @@ function Rankings() {
 }
 
 function UserRankingsList({ rankings }) {
+  const navigate = useNavigate();
+  
   const getMedalForRank = (rank) => {
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
@@ -132,13 +134,45 @@ function UserRankingsList({ rankings }) {
                 <span className="text-2xl font-bold text-gray-600">#{index + 1}</span>
               )}
             </div>
-            {user.picture && (
-              <img
-                src={user.picture}
-                alt={user.name}
-                className="w-12 h-12 rounded-full"
-              />
-            )}
+            <div className="relative">
+              {user.picture && (
+                <img
+                  src={user.picture}
+                  alt={user.name}
+                  className="w-12 h-12 rounded-full"
+                />
+              )}
+              {/* Group badges next to user */}
+              {user.groups && user.groups.length > 0 && (
+                <div className="absolute -bottom-1 -right-1 flex -space-x-2">
+                  {user.groups.slice(0, 2).map((group) => (
+                    <button
+                      key={group.group_id}
+                      onClick={() => navigate('/groups', { state: { openGroupId: group.group_id } })}
+                      className="relative"
+                      title={group.name}
+                    >
+                      {group.picture ? (
+                        <img
+                          src={group.picture}
+                          alt={group.name}
+                          className="w-5 h-5 rounded-full border-2 border-white object-cover hover:scale-110 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border-2 border-white bg-purple-500 flex items-center justify-center hover:scale-110 transition-transform">
+                          <Users className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                  {user.groups.length > 2 && (
+                    <div className="w-5 h-5 rounded-full border-2 border-white bg-gray-400 flex items-center justify-center text-xs text-white">
+                      +{user.groups.length - 2}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900">{user.name}</h3>
               <p className="text-sm text-gray-600">{user.weekly_points || 0} points this week</p>
