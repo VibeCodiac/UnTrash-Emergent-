@@ -844,7 +844,12 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
         maximumAge: 0
       }
     );
-  };
+  }, []);
+
+  // Auto-get location when modal opens
+  useEffect(() => {
+    handleGetLocation();
+  }, [handleGetLocation]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
