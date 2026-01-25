@@ -3,179 +3,200 @@ The user wants to build a Progressive Web App called UnTrash Berlin.
 
 **PRODUCT REQUIREMENTS:**
 -   **Frontend:** A map-based interface (OpenStreetMap) showing pins for trash locations and polygons for cleaned areas in Berlin.
--   **User System:** Users sign up/log in via their Google accounts.
+-   **User System:** Users sign up/log in via their Google accounts. Users can edit their name and picture.
 -   **Trash Reporting & Collection:**
-    -   Users report litter with a photo, which creates a pin on the map. The user's GPS location should be used for accuracy.
+    -   Users report litter with a photo, which creates a pin on the map. The user's GPS location should be used for accuracy. Reporting trash awards a small number of points.
     -   Other users can collect the reported trash and confirm by uploading a photo of the clean site.
     -   Users can also clean an area without a prior report and get points.
--   **Admin Verification:** All points are awarded only *after* an admin verifies the cleanup/collection photo. An admin must be notified of pending verifications. Admins can delete trash reports and cleaned areas from the map, which should also deduct any awarded points from the user. Banning users must work.
+    -   The report and collect flows should go directly to the camera/photo function for speed.
+-   **Admin Verification:** All significant points are awarded only *after* an admin verifies the cleanup/collection photo. An admin must be notified of pending verifications. Admins can delete trash reports and cleaned areas from the map, which should also deduct any awarded points from the user. Banning users must work.
 -   **Gamification:**
-    -   Users receive points for verified cleanup activities. The points system should be balanced.
-    -   A tiered medal system (Bronze, Silver, Gold, Platinum, Diamond) is awarded based on points. Medals should be visually appealing and animated.
-    -   Weekly leaderboards for individuals and groups.
-    -   A My Medals section in the user profile and on the dashboard.
+    -   Users receive points for verified cleanup activities. The points system has been made significantly harder.
+    -   A tiered medal system (Bronze, Silver, Gold, Platinum, Diamond) is awarded based on points.
+    -   Weekly leaderboards for individuals and groups, showing only the top 10 users with more than 0 points. Banned users are hidden.
 -   **Social & Groups:**
-    -   Users can create and join cleanup groups.
-    -   Group owners can delete their groups.
-    -   Groups have a board to post cleanup events.
-    -   Social media sharing for medals and achievements.
+    -   Users can create and join cleanup groups. Group owners can edit event details (including time) and delete their groups.
+    -   Groups can have a profile picture and optional links (e.g., to webpages or chat rooms).
+    -   The latest group event is shown as a preview on the group card.
+    -   Users can mark one group as their Prime Group, which is displayed prominently on their dashboard.
 -   **UI/UX:**
-    -   The app must be responsive and look good on smartphones, with a hamburger menu for small screens.
-    -   The welcome page should clearly explain how the app works without showing specific point values.
-    -   A How It Works section should be accessible from the main navigation.
--   **Admin Panel:**
-    -   An admin role is assigned to .
-    -   Admins can manage users (ban, reset points), content (delete reports/cleanups), and verifications.
--   **Dashboard:** Show weekly stats, upcoming group events, and the user's medals.
--   **Data Management:** Test agent data should not be visible on the frontend for regular users.
+    -   The app must be a fully responsive PWA. All pop-ups and modals should render correctly on all screen sizes, appearing as bottom sheets on mobile.
+    -   The welcome page includes a centered How It Works section.
+    -   A contact/help button in the footer shows support contact info.
+    -   A pop-up on first load explains how to add the PWA to the home screen.
+-   **Notifications:** Real push notifications are sent for new group events. Users can disable these in their settings.
+-   **Data Management:** Cleaned trash and areas are visible for 10 days before disappearing.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a FastAPI backend, React frontend, and MongoDB database. Key features like Google OAuth, a mobile-responsive map-based UI, trash reporting/collection, a rebalanced points system, groups, and an extensive admin panel are implemented. All points are now awarded only after an admin verifies the action. Cloudinary is used for image uploads. The app has been made responsive for mobile devices, and the UI has been refined based on user feedback.
+A full-stack application with a FastAPI backend, React frontend, and MongoDB. Core features like Google OAuth, a responsive map-based UI, trash reporting, a challenging gamification system, groups with profile pictures, and an admin panel are implemented. The app functions as a PWA with responsive modals and real web push notifications for group events. A Prime Group feature has been partially implemented on the frontend but is not yet functional.
 
 **Last working item**:
--   **Last item agent was working:** Ensuring points are only given after admin verification and removing any distinction between AI-verified and non-AI-verified cleanups. This involved updating the backend to prevent immediate point allocation upon reporting/collecting and simplifying the frontend to remove text about AI or specific point values.
+-   **Last item agent was working:** Implementing a Prime Group feature, allowing users to select a primary group to display on their dashboard. This also involved UI tweaks to group cards (smaller delete button, latest event preview) and ensuring group event times are editable.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
 -   **Which testing method agent to use?** both
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Final Verification of Points System (P0)**
+-   **Issue 1: Complete Prime Group Feature (P0)**
+-   **Issue 2: Verify Event Time Editing (P1)**
 
 **Issues Detail:**
--   **Issue 1: Final Verification of Points System**
-    -   **Attempted fixes:** The agent modified  to make all point awards contingent on admin approval. The endpoints  and  no longer grant points directly. Frontend components (, ) were updated to remove specific point promises.
+-   **Issue 1: Complete Prime Group Feature**
+    -   **Attempted fixes:** The agent modified  and  to add the UI elements for selecting and displaying a prime group.
     -   **Next debug checklist:**
-        1.  Perform an end-to-end test:
-            a. Log in as a regular user, report a new piece of trash. Verify no points are awarded.
-            b. Collect that trash. Verify no points are awarded.
-            c. Log in as the admin (). Go to the Admin Panel.
-            d. Approve the pending collection.
-            e. Verify the collector is now awarded the correct number of points.
-        2.  Test the admin's Reset Points feature to ensure it correctly zeros out points and clears medals.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a core user requirement to ensure data quality and prevent gaming the system. The fix needs to be confirmed as working end-to-end.
+        1.  **Backend:** Create a new endpoint in  (e.g., ) to allow a user to set their .
+        2.  **Backend:** Update the  endpoint to return the user's  along with their other data.
+        3.  **Frontend:** In , implement the  function to call the new backend endpoint.
+        4.  **Frontend:** In , fetch the user's prime group details and display the .
+        5.  **Testing:** Perform an end-to-end test: log in, join a group, set it as prime, and verify it appears correctly on the dashboard.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a direct user request to improve user engagement by allowing them to highlight their main group affiliation on their dashboard.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on other issue:** None
 
+-   **Issue 2: Verify Event Time Editing**
+    -   **Attempted fixes:** The agent created a  endpoint and added an Edit Event form in .
+    -   **Next debug checklist:**
+        1.  As a group admin, create an event.
+        2.  Use the Edit Event functionality to change the event's time and date.
+        3.  Save the changes and verify that the event's displayed time is updated correctly in the group details and on the group card preview.
+        4.  Ensure no errors occur and the data persists after a page refresh.
+    -   **Why fix this issue and what will be achieved with the fix?** To provide necessary group management functionality for group admins as requested by the user.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on other issue:** None
+
 **In progress Task List**:
-None.
+-   **Task 1: Backend implementation for Prime Group**
+    -   **Where to resume:** .
+    -   **What will be achieved with this?** The backend logic required to save and retrieve a user's chosen prime group will be created, enabling the frontend feature to work.
+    -   **Status:** NOT STARTED
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on something:** None
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1)** Refine the heatmap visualization.
+    -   **(P2)** **Group Interaction Improvements:** Brainstorm and propose new ways for groups to interact, such as group-specific challenges or a shared gallery.
 -   **Future Tasks:**
-    -   **(P2)** Implement a real notification system (email/push) to replace the current mock implementation.
-    -   **(P2)** Refactor  to extract modal logic into separate components.
-    -   **(P3)** Perform a final review for PWA configuration and GDPR compliance.
+    -   **(P2)** **Refactor Modals:** Refactor  and  to extract modal logic into separate, reusable components.
+    -   **(P2)** **Donation Button:** Implement a real donation integration (e.g., Stripe, PayPal) to replace the placeholder in the footer.
+    -   **(P3)** **PWA Icons:** Generate a full set of production-quality PWA icons (192x192, 512x512) and update the .
+    -   **(P3)** **GDPR Review:** Perform a final review for GDPR compliance, especially concerning data storage and user consent.
 
 **Completed work in this session**
--   **Admin & Points System Overhaul:**
-    -   Implemented a mandatory admin verification step for *all* point-generating activities (trash collection, area cleanups).
-    -   Fixed all initial admin-related bugs (access, rights, content deletion).
-    -   Admins can now ban/unban users and reset/adjust user points.
-    -   Deleting reports now correctly deducts points from users.
-    -   Added a notification badge for admins when verifications are pending.
--   **Gamification and UI Polish:**
-    -   Rebalanced the points system to make it more challenging.
-    -   Created new animated and visually appealing medal designs in the Profile and Dashboard.
-    -   Reset all user points to zero and implemented safeguards to prevent negative points.
-    -   Medals are now correctly calculated and displayed based on user points.
--   **Mobile Responsiveness:**
-    -   Implemented a mobile-first responsive design with a hamburger menu for .
-    -   Optimized layouts for , , , and  for small screens.
--   **Feature Enhancements:**
-    -   Group owners can now delete their own groups.
-    -   Admins can delete cleaned area polygons directly from the map.
-    -   Trash reporting now uses the browser's Geolocation API for accurate positioning.
-    -   Simplified the Welcome page with a How It Works section and added a dedicated page for it.
--   **Deployment Readiness:**
-    -   Resolved deployment blocker by removing hardcoded URLs and fixing the  file.
-    -   Test agent data is now filtered from non-admin views.
+-   **Points & Admin:**
+    -   Awarded a small number of points for *reporting* trash.
+    -   Enabled admins to reset their own points.
+    -   Points are now significantly harder to earn (medal thresholds increased).
+-   **Feature Overhaul (based on user requests):**
+    -   **User Profile:** Implemented functionality for users to change their name and profile picture in Settings.
+    -   **PWA Experience:** Added a pop-up to instruct users on adding the app to their home screen and made all modals/popups fully responsive for a fluid PWA experience.
+    -   **UI/UX:**
+        -   Changed trash report icon to a blue trash bag.
+        -   Streamlined reporting/collecting to go directly to the camera function.
+        -   Added a contact/help footer.
+        -   How It Works section is now centered on large screens.
+        -   Input buttons now say Take Photo instead of Select File.
+    -   **Groups & Rankings:**
+        -   Banned users are now hidden from rankings.
+        -   Rankings now only show the Top 10 users with points > 0.
+        -   Groups can have a profile picture and external links.
+        -   Events can be created with a location.
+        -   Group pictures and links are shown next to users in Rankings.
+        -   Users' group memberships are displayed on their Profile page.
+-   **Real-time Notifications:**
+    -   Replaced mock notifications with real Web Push Notifications for new group events.
+    -   Added toggles in the Settings page for users to enable/disable notifications.
+-   **Data Lifecycle:**
+    -   Extended the visibility of cleaned trash/areas from 7 to 10 days.
 
 **Earlier issues found/mentioned but not fixed**
-None. All major reported issues have been addressed.
+None.
 
 **Known issue recurrence from previous fork**
--   N/A
+None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frontend:** React, Tailwind CSS, Leaflet.js, react-leaflet
+-   **Frontend:** React, Tailwind CSS, Leaflet.js, react-leaflet, Web Push API
 -   **Backend:** FastAPI (Python), Motor (async MongoDB driver)
 -   **Database:** MongoDB
 -   **Image Storage:** Cloudinary (unsigned uploads)
 -   **Authentication:** Emergent-managed Google OAuth with JWT sessions.
--   **AI:** OpenAI Vision via Emergent LLM Key for image verification (logic exists but is no longer used for awarding points).
 
 **key DB schema**
 -   : 
 -   : 
 -   root: 
 -   : 
+-   : 
+-   : 
 
 **changes in tech stack**
 None.
 
 **All files of reference**
--   : Contains all API logic, DB models, and new verification rules.
--   : UI for all admin functions, including verification queues.
--   : Manages map, pins, popups, and user action modals. Updated to use GPS and admin delete functions.
--   : Main user dashboard, now mobile-responsive with a hamburger menu and medal display.
--   : User profile with new animated medals.
--   : Main router, updated with the How It Works route.
--   : New static component explaining the app's functionality.
--   : Now includes Cloudinary configuration.
+-   : Heavily modified to add profile editing, event editing, harder points, 10-day expiration, and real push notification logic.
+-   : Updated for the Prime Group UI and simplified My Groups link.
+-   : Overhauled to support group pictures, links, event editing, responsive modals, and the Prime Group feature.
+-   : Updated with a new trash icon and fully responsive modals (bottom sheets on mobile).
+-   : Rewritten to include profile editing (name/picture) and push notification toggles.
+-   : Updated to show only Top 10 users with points and display group affiliations.
+-   : Updated to show the user's group memberships.
+-   : New service worker for handling push notifications.
+-   : New utility for managing push subscriptions.
+-    & : Updated for better PWA compliance.
 
 **Areas that need refactoring**:
--   : Remains overly complex. The logic for various modals (Report, Collect, Clean Area) should be extracted into separate, self-contained components.
--   : This file contains multiple distinct components (, , etc.). They should be split into their own files under a  directory.
+-   : Still contains all modal logic (Report, Collect, Clean Area). These should be extracted into their own components.
+-   : Still contains multiple modal definitions (, , , ). These should be broken out into a  directory.
 
 **key api endpoints**
--   : Sets a user's points.
--   : Deletes a cleaned area report.
--   : Approves a collection and awards points.
--   : Deletes a group (owner only).
--   : Admin-only view to see test data.
+-   : Update user's name and profile picture.
+-   : Retrieves current user data.
+-   : Edits an existing group event.
+-   : Saves a user's push notification subscription.
+-   : Removes a user's push notification subscription.
+-   : Updates a user's notification preferences.
 
 **Critical Info for New Agent**
--   **Admin User:** The admin email is hardcoded as . All admin features must be tested while logged in as this user.
--   **Points System:** No points are awarded until an admin approves the activity via the Admin Panel. The UI no longer mentions different point values or AI verification.
--   **Responsiveness:** The app has been refactored for mobile-first responsiveness. The primary navigation is in  and uses a hamburger menu on small screens.
--   **Location Services:** Trash reporting now relies on the browser's Geolocation API. This will trigger a permission prompt for the user.
+-   **Prime Group is half-done:** The frontend UI is in place, but the backend endpoint to save the user's selection is missing. This is the highest priority task.
+-   **Responsive Modals:** All modals in  and  have been refactored to be responsive, appearing as animated bottom sheets on mobile screens (, etc.).
+-   **Push Notifications:** The notification system is now real and uses the browser's native Web Push API. It requires HTTPS and user permission. The entire flow (subscribe, save subscription, send push) is implemented.
 
 **documents and test reports created in this job**
--   /app/test_reports/iteration_1.json
--   /app/test_reports/iteration_2.json
--   /app/test_reports/iteration_3.json
--   /app/test_reports/iteration_4.json
--   /app/memory/PRD.md
+-   /app/test_reports/iteration_6.json
+-   /app/test_reports/iteration_7.json
+-   /app/memory/PRD.md (updated multiple times)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Ensure points reset works, points are only given after verification, and no distinction is made for AI verification. (IN PROGRESS)
-2.  **User:** Simplify the welcome page text and fix the location report to use the phone's GPS. (DONE)
-3.  **User:** Add a How does it work? section to the main menu. (DONE)
-4.  **User:** Remove stats from the welcome page, clarify usage, and show medals on the dashboard. (DONE)
-5.  **User:** Make the app layout responsive for small smartphone screens. (DONE)
-6.  **User:** Run a deployment health check. (DONE)
-7.  **User:** Add the ability for admins to delete cleaned areas from the map. (DONE)
-8.  **User:** Set all user points to zero and ensure the point system prevents negative values. (DONE)
-9.  **User:** Filter test data, scale back points, allow admins to reset points, and create animated medals. (DONE)
-10. **User:** Ensure deleting reports deducts points and that the user banning feature works. (DONE)
+1.  **User:** Requests Prime Group feature, smaller delete button, latest event preview on group cards, and event time editing. (IN PROGRESS)
+2.  **User:** Make all sub-pages and popups fully responsive for PWA. (DONE)
+3.  **User:** Implement real notifications (push or similar) with a disable option in settings. (DONE)
+4.  **User:** New features: Hide contact name, editable group events, group pictures, GPS for area cleanup, 10-day visibility for cleanups, hide 0-point users from ranking, make points harder, show group pictures next to users, and asked for group interaction ideas. (DONE)
+5.  **User:** Center How It Works on the welcome page and change select file to take photo. (DONE)
+6.  **User:** Great list of improvements! (Agent clarification on new features). (DONE)
+7.  **User:** Confirmed choices for a large batch of features (language, profile editing, camera flow, dashboard stats). (DONE)
+8.  **User:** Add language support, user profile editing, PWA install pop-up, new trash icon, camera-first flow, fix banned user visibility, add contact footer, limit ranking to top 10, add event location, link dashboard events to groups. (DONE)
+9.  **User:** Received testing report for points system fix. (DONE)
+10. **User:** Enable points for reporting trash and ensure admin can reset points for any account, including their own. (DONE)
 
 **Project Health Check:**
--   **Broken:** None.
--   **Mocked:** Email/Push notification system.
+-   **Broken:** The Prime Group feature is incomplete as the backend logic is missing.
+-   **Mocked:** None.
 
 **3rd Party Integrations**
--   **OpenAI Vision (Emergent LLM Key):** Backend logic exists for AI image analysis but is not currently used for awarding points. Uses Emergent LLM Key.
 -   **Google OAuth (Emergent-managed):** Handles user authentication.
 -   **Cloudinary:** Manages image storage. Requires User API Key/Secret.
+-   **OpenAI Vision (Emergent LLM Key):** Backend logic exists but is not used for awarding points.
+-   **Web Push API:** A browser standard used for sending push notifications.
 
 **Testing status**
 -   **Testing agent used after significant changes:** YES
@@ -187,4 +208,5 @@ None.
 -   **Admin Account:** Log in via Google with the email .
 
 **What agent forgot to execute**
--   The agent implemented the final changes to the points system (making all points dependent on admin verification) but did not perform a final end-to-end test to confirm the entire flow works as expected.</analysis>
+-   The agent did not implement the backend endpoint required to save a user's Prime Group selection, leaving the feature non-functional.
+-   The agent implemented event time editing but did not explicitly confirm via testing that it works end-to-end.</analysis>

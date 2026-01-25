@@ -5,7 +5,7 @@
 ### Step 1: Are you signed in?
 **You MUST sign in with Google before you can upload photos or report trash!**
 
-1. Go to https://ecoberlin-map.preview.emergentagent.com
+1. Go to https://cleanup-berlin.preview.emergentagent.com
 2. Click "Sign in with Google"
 3. After signing in, you'll be redirected to the Dashboard
 4. NOW you can report trash and upload photos!

@@ -209,7 +209,7 @@ EMERGENT_LLM_KEY=sk-emergent-...
 
 ### Frontend (.env)
 ```env
-REACT_APP_BACKEND_URL=https://ecoberlin-map.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://cleanup-berlin.preview.emergentagent.com
 WDS_SOCKET_PORT=443
 ENABLE_HEALTH_CHECK=false
 ```
@@ -263,4 +263,4 @@ Built with ❤️ for a cleaner Berlin
 
 ---
 
-**Live URL**: https://ecoberlin-map.preview.emergentagent.com
+**Live URL**: https://cleanup-berlin.preview.emergentagent.com

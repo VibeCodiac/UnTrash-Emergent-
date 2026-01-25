@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ecoberlin-map.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cleanup-berlin.preview.emergentagent.com')
 OWNER_SESSION_TOKEN = "mTuak5CtB7pp7_9RmTUgwYofl8AIFgBO9v_bxDlxN0o"
 OWNER_USER_ID = "user_5f414c29c917"
 EXISTING_GROUP_ID = "group_058ea88fb393"

@@ -98,7 +98,7 @@ The app requires Google authentication before you can:
 ### Step-by-step fix:
 
 1. **Sign in with Google:**
-   - Go to https://ecoberlin-map.preview.emergentagent.com
+   - Go to https://cleanup-berlin.preview.emergentagent.com
    - Click "Sign in with Google"
    - Complete Google auth
    - You'll be redirected to Dashboard

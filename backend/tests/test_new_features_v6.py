@@ -8,7 +8,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ecoberlin-map.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cleanup-berlin.preview.emergentagent.com')
 
 class TestRankingsAPI:
     """Test rankings endpoint - max 10 users, excludes banned"""
