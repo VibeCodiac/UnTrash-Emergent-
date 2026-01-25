@@ -913,11 +913,11 @@ function CleanAreaModal({ onClose, onSubmit, loading }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-testid="clean-area-modal">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in" data-testid="clean-area-modal">
+      <div className="bg-white rounded-t-xl sm:rounded-xl p-4 sm:p-6 w-full sm:max-w-md sm:mx-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto animate-slide-up sm:animate-scale-in pb-safe">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Mark Area as Cleaned</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-900">Mark Area as Cleaned</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1">
             <X className="w-6 h-6" />
           </button>
         </div>
