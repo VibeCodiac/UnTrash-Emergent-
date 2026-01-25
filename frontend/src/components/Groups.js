@@ -171,11 +171,9 @@ function Groups({ user }) {
                   group={group}
                   isMember={true}
                   isOwner={isGroupOwner(group)}
-                  isPrime={primeGroupId === group.group_id}
                   onLeave={() => handleLeaveGroup(group.group_id)}
                   onDelete={() => handleDeleteGroup(group.group_id)}
                   onViewDetails={() => setSelectedGroup(group)}
-                  onSetPrime={() => handleSetPrimeGroup(group.group_id)}
                   latestEvent={groupEvents[group.group_id]}
                   loading={loading}
                 />
