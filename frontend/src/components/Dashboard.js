@@ -98,10 +98,13 @@ function Dashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showPWAPopup, setShowPWAPopup] = useState(false);
+  const [primeGroup, setPrimeGroup] = useState(null);
+  const [primeGroupEvent, setPrimeGroupEvent] = useState(null);
 
   useEffect(() => {
     loadWeeklyStats();
     loadUpcomingEvents();
+    loadPrimeGroup();
     if (user?.is_admin) {
       loadPendingCount();
     }
@@ -141,6 +144,37 @@ function Dashboard({ user }) {
       }
     } catch (error) {
       console.error('Error loading events:', error);
+    }
+  };
+
+  const loadPrimeGroup = async () => {
+    const primeGroupId = localStorage.getItem('prime_group_id');
+    if (!primeGroupId) return;
+    
+    try {
+      const response = await fetch(`${API}/groups`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const groups = await response.json();
+        const prime = groups.find(g => g.group_id === primeGroupId);
+        if (prime) {
+          setPrimeGroup(prime);
+          // Load latest event for prime group
+          const eventsResponse = await fetch(`${API}/groups/${primeGroupId}/events`, {
+            credentials: 'include'
+          });
+          if (eventsResponse.ok) {
+            const events = await eventsResponse.json();
+            const futureEvents = events.filter(e => new Date(e.event_date) > new Date());
+            if (futureEvents.length > 0) {
+              setPrimeGroupEvent(futureEvents[0]);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading prime group:', error);
     }
   };
 
