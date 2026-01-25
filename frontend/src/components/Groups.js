@@ -194,30 +194,49 @@ function Groups({ user }) {
   );
 }
 
-function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onViewDetails, loading }) {
+function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onViewDetails, onSetPrime, isPrime, loading, latestEvent }) {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow" data-testid="group-card">
-      <div className="flex items-center space-x-3 mb-4">
+    <div className={`bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow ${isPrime ? 'ring-2 ring-yellow-400' : ''}`} data-testid="group-card">
+      <div className="flex items-center space-x-3 mb-3">
         {group.picture ? (
-          <img src={group.picture} alt={group.name} className="w-12 h-12 rounded-full object-cover" />
+          <img src={group.picture} alt={group.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover" />
         ) : (
-          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-            <Users className="w-6 h-6 text-purple-600" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full flex items-center justify-center">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
           </div>
         )}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-bold text-gray-900">{group.name}</h3>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">{group.name}</h3>
+            {isPrime && <span className="text-yellow-500 text-lg">⭐</span>}
             {isOwner && (
-              <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">Owner</span>
+              <span className="text-xs bg-purple-600 text-white px-1.5 py-0.5 rounded flex-shrink-0">Owner</span>
             )}
           </div>
-          <p className="text-sm text-gray-600">{group.member_ids?.length || 0} members</p>
+          <p className="text-xs sm:text-sm text-gray-600">{group.member_ids?.length || 0} members</p>
         </div>
       </div>
 
       {group.description && (
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">{group.description}</p>
+        <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2">{group.description}</p>
+      )}
+
+      {/* Latest Event Preview */}
+      {latestEvent && (
+        <div className="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-100">
+          <div className="flex items-center space-x-2 text-xs text-blue-700">
+            <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="font-medium truncate">{latestEvent.title}</span>
+          </div>
+          <p className="text-xs text-blue-600 mt-1 ml-5">
+            {new Date(latestEvent.event_date).toLocaleDateString()} at {new Date(latestEvent.event_date).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+          </p>
+          {latestEvent.location_name && (
+            <p className="text-xs text-gray-500 mt-0.5 ml-5 truncate">
+              📍 {latestEvent.location_name}
+            </p>
+          )}
+        </div>
       )}
 
       {/* External Links */}
@@ -248,36 +267,53 @@ function GroupCard({ group, isMember, isOwner, onJoin, onLeave, onDelete, onView
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-gray-600">Points: {group.total_points || 0}</span>
-        <span className="text-sm text-gray-600">Weekly: {group.weekly_points || 0}</span>
+      <div className="flex items-center justify-between mb-3 text-xs sm:text-sm text-gray-600">
+        <span>Points: {group.total_points || 0}</span>
+        <span>Weekly: {group.weekly_points || 0}</span>
       </div>
 
       <div className="space-y-2">
-        <button
-          onClick={onViewDetails}
-          className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-          data-testid="view-group-details-button"
-        >
-          View Details
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={onViewDetails}
+            className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm"
+            data-testid="view-group-details-button"
+          >
+            Details
+          </button>
+          {isMember && (
+            <button
+              onClick={onSetPrime}
+              className={`px-3 py-2 rounded-lg text-xs sm:text-sm transition-colors ${
+                isPrime 
+                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title={isPrime ? 'Remove from dashboard' : 'Set as prime group'}
+              data-testid="set-prime-button"
+            >
+              {isPrime ? '⭐' : '☆'}
+            </button>
+          )}
+        </div>
         {isMember ? (
           isOwner ? (
             <button
               onClick={onDelete}
               disabled={loading}
-              className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 text-sm flex items-center justify-center space-x-2"
+              className="w-full text-red-600 hover:text-red-700 text-xs py-1 transition-colors disabled:text-gray-400 flex items-center justify-center space-x-1"
               data-testid="delete-group-button"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3" />
               <span>Delete Group</span>
             </button>
           ) : (
             <button
               onClick={onLeave}
               disabled={loading}
-              className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 text-sm"
+              className="w-full text-red-600 hover:text-red-700 text-xs py-1 transition-colors disabled:text-gray-400"
               data-testid="leave-group-button"
+            >
             >
               Leave Group
             </button>
