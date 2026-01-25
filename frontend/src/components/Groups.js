@@ -13,9 +13,11 @@ function Groups({ user }) {
   const location = useLocation();
   const [groups, setGroups] = useState([]);
   const [myGroups, setMyGroups] = useState([]);
+  const [groupEvents, setGroupEvents] = useState({}); // Store latest event per group
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [primeGroupId, setPrimeGroupId] = useState(localStorage.getItem('prime_group_id') || null);
 
   useEffect(() => {
     loadGroups();
@@ -38,9 +40,54 @@ function Groups({ user }) {
       });
       setGroups(response.data);
       const userGroupIds = user?.joined_groups || [];
-      setMyGroups(response.data.filter(g => userGroupIds.includes(g.group_id)));
+      const userGroups = response.data.filter(g => userGroupIds.includes(g.group_id));
+      setMyGroups(userGroups);
+      
+      // Load latest event for each user's group
+      for (const group of userGroups) {
+        loadLatestEvent(group.group_id);
+      }
     } catch (error) {
       console.error('Error loading groups:', error);
+    }
+  };
+
+  const loadLatestEvent = async (groupId) => {
+    try {
+      const response = await axios.get(`${API}/groups/${groupId}/events`, {
+        withCredentials: true
+      });
+      const events = response.data;
+      // Get the next upcoming event
+      const futureEvents = events.filter(e => new Date(e.event_date) > new Date());
+      if (futureEvents.length > 0) {
+        setGroupEvents(prev => ({
+          ...prev,
+          [groupId]: futureEvents[0]
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading events for group:', groupId);
+    }
+  };
+
+  const handleSetPrimeGroup = async (groupId) => {
+    if (primeGroupId === groupId) {
+      // Unset prime group
+      localStorage.removeItem('prime_group_id');
+      setPrimeGroupId(null);
+      // Also update backend
+      try {
+        await axios.put(`${API}/users/profile`, { prime_group_id: null }, { withCredentials: true });
+      } catch (e) {}
+    } else {
+      // Set as prime group
+      localStorage.setItem('prime_group_id', groupId);
+      setPrimeGroupId(groupId);
+      // Also update backend
+      try {
+        await axios.put(`${API}/users/profile`, { prime_group_id: groupId }, { withCredentials: true });
+      } catch (e) {}
     }
   };
 
@@ -97,6 +144,10 @@ function Groups({ user }) {
       await axios.delete(`${API}/groups/${groupId}`, {
         withCredentials: true
       });
+      if (primeGroupId === groupId) {
+        localStorage.removeItem('prime_group_id');
+        setPrimeGroupId(null);
+      }
       loadGroups();
       window.location.reload();
     } catch (error) {
