@@ -203,16 +203,16 @@ async def verify_trash_in_image(image_url: str) -> bool:
         return False
 
 def calculate_medal_for_points(monthly_points: int) -> Optional[str]:
-    """Calculate medal based on monthly points (adjusted for reduced point values)"""
-    if monthly_points >= 500:
+    """Calculate medal based on monthly points (harder thresholds - expanded scale)"""
+    if monthly_points >= 1000:
         return "diamond"
-    elif monthly_points >= 300:
+    elif monthly_points >= 500:
         return "platinum"
-    elif monthly_points >= 150:
+    elif monthly_points >= 250:
         return "gold"
-    elif monthly_points >= 75:
+    elif monthly_points >= 100:
         return "silver"
-    elif monthly_points >= 30:
+    elif monthly_points >= 50:
         return "bronze"
     return None
 
@@ -240,11 +240,11 @@ async def update_user_points(user_id: str, points: int):
     
     # Remove medals if points dropped below threshold (e.g., admin reset or point deduction)
     if current_month in medals:
-        # Keep only medals that match current point level
+        # Keep only medals that match current point level (harder thresholds)
         valid_medals = []
         medal_thresholds = [
-            ("bronze", 30), ("silver", 75), ("gold", 150), 
-            ("platinum", 300), ("diamond", 500)
+            ("bronze", 50), ("silver", 100), ("gold", 250), 
+            ("platinum", 500), ("diamond", 1000)
         ]
         for medal, threshold in medal_thresholds:
             if new_monthly >= threshold and medal in medals[current_month]:
@@ -880,6 +880,42 @@ async def delete_group_event(request: Request, group_id: str, event_id: str):
     await db.group_events.delete_one({"event_id": event_id})
     return {"message": "Event deleted successfully"}
 
+@api_router.put("/groups/{group_id}/events/{event_id}")
+async def update_group_event(request: Request, group_id: str, event_id: str, data: dict):
+    """Update a group event (event creator only)"""
+    user = await get_user_from_session(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    event = await db.group_events.find_one({"event_id": event_id}, {"_id": 0})
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Only event creator can edit
+    if user.user_id != event.get("created_by"):
+        raise HTTPException(status_code=403, detail="Only the event creator can edit this event")
+    
+    update_fields = {}
+    if "title" in data:
+        update_fields["title"] = data["title"]
+    if "description" in data:
+        update_fields["description"] = data["description"]
+    if "event_date" in data:
+        update_fields["event_date"] = datetime.fromisoformat(data["event_date"])
+    if "location" in data:
+        update_fields["location"] = Location(**data["location"]).model_dump() if data["location"] else None
+    if "location_name" in data:
+        update_fields["location_name"] = data["location_name"]
+    
+    if update_fields:
+        await db.group_events.update_one(
+            {"event_id": event_id},
+            {"$set": update_fields}
+        )
+    
+    updated_event = await db.group_events.find_one({"event_id": event_id}, {"_id": 0})
+    return updated_event
+
 # ==================== RANKINGS ENDPOINTS ====================
 
 @api_router.get("/rankings/weekly/users")
@@ -1124,10 +1160,10 @@ async def reset_user_points(request: Request, user_id: str, data: dict = None):
     if clear_medals:
         medals = {}
     else:
-        # Auto-adjust medals to match new monthly points
+        # Auto-adjust medals to match new monthly points (new harder thresholds)
         medal_thresholds = [
-            ("bronze", 30), ("silver", 75), ("gold", 150), 
-            ("platinum", 300), ("diamond", 500)
+            ("bronze", 50), ("silver", 100), ("gold", 250), 
+            ("platinum", 500), ("diamond", 1000)
         ]
         valid_medals = []
         for medal, threshold in medal_thresholds:
