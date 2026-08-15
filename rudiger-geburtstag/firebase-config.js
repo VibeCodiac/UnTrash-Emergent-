@@ -14,12 +14,12 @@
 // ============================================================================
 
 window.RUEDIGER_FIREBASE_CONFIG = {
-  apiKey: "DEIN_API_KEY",
-  authDomain: "DEIN_PROJEKT.firebaseapp.com",
-  projectId: "DEIN_PROJEKT",
-  storageBucket: "DEIN_PROJEKT.appspot.com",
-  messagingSenderId: "DEINE_SENDER_ID",
-  appId: "DEINE_APP_ID",
+  apiKey: "AIzaSyDirBF3q4dWYw2-0KIQbg1tL-xH0EGf5VM",
+  authDomain: "ruedigers-geburtstag.firebaseapp.com",
+  projectId: "ruedigers-geburtstag",
+  storageBucket: "ruedigers-geburtstag.firebasestorage.app",
+  messagingSenderId: "487964270336",
+  appId: "1:487964270336:web:39670e71da1def50e8dde5",
 };
 
 // Passwort für den Zugang zur Seite (einfacher Schutz vor Fremden,
