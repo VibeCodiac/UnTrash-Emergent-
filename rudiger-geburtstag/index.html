@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rüdiger wird 61 – Die Goldenen Zwanziger</title>
+<meta name="description" content="Foto- und Gästebuch zu Rüdigers 61. Geburtstag im Stil der Goldenen Zwanziger." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230b1f18'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='%23c9a24b' font-family='Georgia,serif'%3ER%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===================== PASSWORT-SCHRANKE ===================== -->
+<div id="password-gate" class="gate-overlay">
+  <div class="deco-frame gate-box">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+    <p class="eyebrow">Private Feier</p>
+    <h1 class="gate-title">Willkommen</h1>
+    <div class="divider"><span></span><i>&#10022;</i><span></span></div>
+    <p class="gate-sub">Dieser Abend gehört den geladenen Gästen von Rüdiger.<br/>Bitte gib das Passwort ein, um einzutreten.</p>
+    <form id="password-form" autocomplete="off">
+      <input type="password" id="password-input" placeholder="Passwort" required />
+      <button type="submit">Eintreten</button>
+    </form>
+    <p id="password-error" class="error hidden">Falsches Passwort — bitte versuche es erneut.</p>
+  </div>
+</div>
+
+<!-- ===================== BEGRÜSSUNGS-POPUP ===================== -->
+<div id="welcome-popup" class="popup-overlay hidden">
+  <div class="deco-frame popup-box">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+    <img src="assets/ruediger-placeholder.svg" alt="Rüdiger" class="popup-photo" id="popup-photo" />
+    <h2 class="popup-title">Herzlichen Glückwunsch,<br/>Rüdiger!</h2>
+    <p class="popup-sub">Die Goldenen Zwanziger feiern deinen<br/><strong>61. Geburtstag</strong></p>
+    <button id="popup-continue">Zur Feier&nbsp;&#9656;</button>
+  </div>
+</div>
+
+<!-- ===================== HAUPTSEITE ===================== -->
+<div id="main-site" class="hidden">
+
+  <nav class="navbar">
+    <span class="nav-logo">R&nbsp;·&nbsp;61</span>
+    <div class="nav-links">
+      <a href="#gaestebuch">Gästebuch</a>
+      <a href="#fotos">Fotos</a>
+      <a href="#menu">Menü</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Die Goldenen Zwanziger laden ein</p>
+      <h1 class="hero-title">R&nbsp;Ü&nbsp;D&nbsp;I&nbsp;G&nbsp;E&nbsp;R</h1>
+      <p class="hero-sub">wird <span class="gold-text">61</span></p>
+      <div class="divider"><span></span><i>&#10022;</i><span></span></div>
+      <div class="deco-frame event-card">
+        <p><strong>15. August 2026</strong></p>
+        <p>Bielefeld&nbsp;·&nbsp;Schildesche</p>
+      </div>
+      <div class="scroll-hint">&#8595;</div>
+    </div>
+  </header>
+
+  <!-- ===================== GÄSTEBUCH ===================== -->
+  <section id="gaestebuch" class="section">
+    <p class="eyebrow center">Hinterlasse einen Gruß</p>
+    <h2 class="section-title">Gästebuch</h2>
+    <div class="divider"><span></span><i>&#10022;</i><span></span></div>
+
+    <form id="guestbook-form" class="deco-frame form-card">
+      <input type="text" id="guest-name" placeholder="Dein Name" maxlength="60" required />
+      <textarea id="guest-message" placeholder="Dein Geburtstagsgruß an Rüdiger..." maxlength="500" rows="4" required></textarea>
+      <button type="submit">Gruß hinterlassen</button>
+      <p id="guestbook-status" class="form-status hidden"></p>
+    </form>
+
+    <div id="guestbook-list" class="guestbook-list"></div>
+  </section>
+
+  <!-- ===================== FOTOS ===================== -->
+  <section id="fotos" class="section alt-bg">
+    <p class="eyebrow center">Momente festhalten</p>
+    <h2 class="section-title">Fotos</h2>
+    <div class="divider"><span></span><i>&#10022;</i><span></span></div>
+
+    <form id="photo-form" class="deco-frame form-card">
+      <input type="text" id="photo-name" placeholder="Dein Name (optional)" maxlength="60" />
+      <label class="file-drop" id="file-drop-label">
+        <input type="file" id="photo-input" accept="image/*" multiple />
+        <span id="file-drop-text">Fotos auswählen oder hierher ziehen</span>
+      </label>
+      <button type="submit">Hochladen</button>
+      <div id="upload-progress" class="upload-progress hidden">
+        <div id="upload-progress-bar"></div>
+      </div>
+      <p id="photo-status" class="form-status hidden"></p>
+    </form>
+
+    <div id="photo-gallery" class="photo-gallery"></div>
+  </section>
+
+  <!-- ===================== MENÜ ===================== -->
+  <section id="menu" class="section">
+    <p class="eyebrow center">Speis und Trank</p>
+    <h2 class="section-title">Menü</h2>
+    <div class="divider"><span></span><i>&#10022;</i><span></span></div>
+
+    <div class="menu-grid">
+      <div class="deco-frame menu-card">
+        <p class="menu-card-eyebrow">Tagsüber</p>
+        <ul class="menu-list">
+          <li>Zitronentarte</li>
+          <li>Blaubeertorte</li>
+          <li>Tee</li>
+          <li>Kaffee</li>
+        </ul>
+      </div>
+      <div class="deco-frame menu-card">
+        <p class="menu-card-eyebrow">Zum Abendessen</p>
+        <ul class="menu-list">
+          <li>Grillfleisch</li>
+          <li>Bier</li>
+          <li>Wein</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="divider"><span></span><i>&#10022;</i><span></span></div>
+    <p>Mit Liebe gefeiert &nbsp;&middot;&nbsp; Rüdiger wird 61 &nbsp;&middot;&nbsp; 15. August 2026</p>
+  </footer>
+</div>
+
+<!-- ===================== LIGHTBOX ===================== -->
+<div id="lightbox" class="lightbox-overlay hidden">
+  <button id="lightbox-close" class="lightbox-close">&times;</button>
+  <img id="lightbox-image" src="" alt="Foto" />
+</div>
+
+<script src="firebase-config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
