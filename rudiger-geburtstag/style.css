@@ -396,19 +396,6 @@ input:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px r
 .file-drop:hover { border-color: var(--gold); background: rgba(201,162,75,0.06); }
 .file-drop input { display: none; }
 
-.upload-progress {
-  height: 6px;
-  background: rgba(255,255,255,0.08);
-  margin-top: 6px;
-  overflow: hidden;
-}
-.upload-progress > div {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
-  transition: width 0.2s ease;
-}
-
 .photo-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));

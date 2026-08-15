@@ -10,6 +10,52 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// Verkleinert/komprimiert ein Bild im Browser zu einem JPEG-Data-URL, damit
+// es als Textfeld in ein Firestore-Dokument passt (Limit: 1 MiB pro
+// Dokument). Reduziert Größe/Qualität schrittweise, bis es passt.
+async function compressImageToDataUrl(file, maxBytes = 700000) {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  const img = await new Promise((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = reject;
+    el.src = dataUrl;
+  });
+
+  const attempts = [
+    { maxDim: 1400, quality: 0.75 },
+    { maxDim: 1100, quality: 0.7 },
+    { maxDim: 900, quality: 0.6 },
+    { maxDim: 700, quality: 0.5 },
+    { maxDim: 500, quality: 0.45 },
+  ];
+
+  for (const { maxDim, quality } of attempts) {
+    let { width, height } = img;
+    if (width > maxDim || height > maxDim) {
+      if (width > height) {
+        height = Math.round(height * (maxDim / width));
+        width = maxDim;
+      } else {
+        width = Math.round(width * (maxDim / height));
+        height = maxDim;
+      }
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+    const out = canvas.toDataURL("image/jpeg", quality);
+    if (out.length <= maxBytes) return out;
+  }
+  throw new Error("Bild konnte nicht klein genug komprimiert werden.");
+}
+
 function formatTimestamp(ts) {
   if (!ts) return "";
   const date = typeof ts.toDate === "function" ? ts.toDate() : new Date(ts);
@@ -94,8 +140,6 @@ const photoStatus = document.getElementById("photo-status");
 const photoGallery = document.getElementById("photo-gallery");
 const photoInput = document.getElementById("photo-input");
 const fileDropText = document.getElementById("file-drop-text");
-const uploadProgressWrap = document.getElementById("upload-progress");
-const uploadProgressBar = document.getElementById("upload-progress-bar");
 
 const lightbox = document.getElementById("lightbox");
 const lightboxImage = document.getElementById("lightbox-image");
@@ -151,18 +195,8 @@ async function initFirebase() {
   } = await import(
     "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"
   );
-  const {
-    getStorage,
-    ref,
-    uploadBytesResumable,
-    getDownloadURL,
-  } = await import(
-    "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js"
-  );
-
   const app = initializeApp(config);
   const db = getFirestore(app);
-  const storage = getStorage(app);
 
   // ---------- Gästebuch ----------
 
@@ -255,7 +289,7 @@ async function initFirebase() {
     }
   );
 
-  const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12 MB
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB Original, wird vor dem Speichern verkleinert
 
   photoForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -268,7 +302,7 @@ async function initFirebase() {
     const uploaderName = document.getElementById("photo-name").value.trim();
     const btn = photoForm.querySelector("button");
     btn.disabled = true;
-    uploadProgressWrap.classList.remove("hidden");
+    setStatus(photoStatus, "Fotos werden verarbeitet …", "ok");
 
     let uploaded = 0;
     let failed = 0;
@@ -283,42 +317,21 @@ async function initFirebase() {
         continue;
       }
 
-      const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-      const path = `photos/${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2, 8)}-${safeName}`;
-      const storageRef = ref(storage, path);
-      const task = uploadBytesResumable(storageRef, file);
-
       try {
-        await new Promise((resolve, reject) => {
-          task.on(
-            "state_changed",
-            (snap) => {
-              const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
-              uploadProgressBar.style.width = `${pct}%`;
-            },
-            reject,
-            resolve
-          );
-        });
-        const url = await getDownloadURL(storageRef);
+        const dataUrl = await compressImageToDataUrl(file);
         await addDoc(photosCol, {
-          url,
-          storagePath: path,
+          url: dataUrl,
           name: uploaderName || null,
           timestamp: serverTimestamp(),
         });
         uploaded++;
       } catch (err) {
-        console.error("Upload fehlgeschlagen:", err);
+        console.error("Foto konnte nicht gespeichert werden:", err);
         failed++;
       }
     }
 
     btn.disabled = false;
-    uploadProgressWrap.classList.add("hidden");
-    uploadProgressBar.style.width = "0%";
     photoForm.reset();
     fileDropText.textContent = "Fotos auswählen oder hierher ziehen";
 

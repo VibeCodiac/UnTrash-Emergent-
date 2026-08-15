@@ -13,9 +13,11 @@ Foto- und Gästebuch für Rüdigers 61. Geburtstag am **15. August 2026** in
 - 🍋 Menü-Übersicht (Tagsüber & Abendessen)
 
 Die Seite ist **komplett statisch** (reines HTML/CSS/JS, kein Build-Prozess
-nötig) und lässt sich direkt mit **GitHub Pages** hosten. Damit Grüße und
-Fotos für *alle* Besucher sichtbar gespeichert werden, nutzt sie im
-Hintergrund ein kostenloses **Firebase**-Projekt (Firestore + Storage).
+nötig). Damit Grüße und Fotos für *alle* Besucher sichtbar gespeichert
+werden, nutzt sie im Hintergrund ein kostenloses **Firebase**-Projekt
+(Firestore). Fotos werden im Browser automatisch verkleinert und direkt in
+Firestore gespeichert — bewusst **ohne Firebase Storage**, damit alles im
+kostenlosen Spark-Tarif bleibt und keine Kreditkarte hinterlegt werden muss.
 
 ---
 
@@ -25,15 +27,22 @@ Hintergrund ein kostenloses **Firebase**-Projekt (Firestore + Storage).
    und melde dich mit einem Google-Konto an.
 2. **Projekt erstellen** → beliebigen Namen vergeben, z. B. `ruedigers-birthday`.
    Google Analytics kannst du deaktivieren, wird nicht gebraucht.
-3. Im Projekt links auf **Build → Firestore Database** → **Datenbank erstellen**.
+3. Im Projekt links auf **Build → Firestore Database** → **Datenbank erstellen**
+   (**nicht** „Realtime Database" — das ist ein anderes Produkt).
    - Standort z. B. `eur3 (europe-west)` wählen.
    - Modus: **Testmodus** (wir setzen die Regeln unten manuell).
-4. Links auf **Build → Storage** → **Los geht's** → gleichen Standort wählen.
-5. Links oben auf das Zahnrad ⚙️ → **Projekteinstellungen** → runterscrollen zu
+4. Links oben auf das Zahnrad ⚙️ → **Projekteinstellungen** → runterscrollen zu
    **Meine Apps** → auf das Symbol **`</>`** (Web-App hinzufügen) klicken.
    - App-Spitzname z. B. `ruediger-geburtstag`, **kein** Firebase Hosting nötig.
-6. Es erscheint ein Code-Block `const firebaseConfig = { ... }`. Diese Werte
+5. Es erscheint ein Code-Block `const firebaseConfig = { ... }`. Diese Werte
    brauchst du gleich.
+
+> 💡 **Firebase Storage wird bewusst nicht verwendet** — seit Ende 2024
+> verlangt Google dafür den kostenpflichtigen „Blaze"-Tarif samt hinterlegter
+> Kreditkarte, auch wenn man innerhalb der Gratis-Grenzen bleibt. Firestore
+> (die Datenbank) bleibt dagegen komplett im kostenlosen „Spark"-Tarif, ganz
+> ohne Kreditkarte — deshalb speichert diese Seite auch Fotos direkt in
+> Firestore statt in Storage.
 
 ### Config eintragen
 
@@ -45,7 +54,6 @@ window.RUEDIGER_FIREBASE_CONFIG = {
   apiKey: "AIza...",
   authDomain: "ruedigers-birthday.firebaseapp.com",
   projectId: "ruedigers-birthday",
-  storageBucket: "ruedigers-birthday.appspot.com",
   messagingSenderId: "123456789",
   appId: "1:123456789:web:abcdef",
 };
@@ -58,9 +66,9 @@ Firebase-Web-App und sind öffentlich sichtbar. Der eigentliche Schutz kommt
 ### Sicherheitsregeln setzen
 
 Da die Seite keinen echten Login hat (nur ein gemeinsames Passwort auf der
-Seite selbst), müssen Firestore und Storage für Schreibzugriffe offen sein.
-Damit nicht komplett fremde Bots die Datenbank vollmüllen können, begrenzen
-die folgenden Regeln wenigstens Feldgrößen und Dateitypen.
+Seite selbst), muss Firestore für Schreibzugriffe offen sein. Damit nicht
+komplett fremde Bots die Datenbank vollmüllen können, begrenzen die
+folgenden Regeln wenigstens Feldgrößen.
 
 **Firestore-Regeln** (Firestore Database → Regeln, Inhalt ersetzen):
 
@@ -78,29 +86,15 @@ service cloud.firestore {
     }
     match /photos/{photoId} {
       allow read: if true;
-      allow create: if request.resource.data.url is string;
+      allow create: if request.resource.data.url is string
+                    && request.resource.data.url.size() < 900000;
       allow update, delete: if false;
     }
   }
 }
 ```
 
-**Storage-Regeln** (Storage → Regeln, Inhalt ersetzen):
-
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /photos/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.resource.size < 12 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-    }
-  }
-}
-```
-
-Nach dem Einfügen jeweils auf **Veröffentlichen** klicken.
+Nach dem Einfügen auf **Veröffentlichen** klicken.
 
 > ⚠️ Hinweis: Das ist ein pragmatischer Schutz für eine private
 > Geburtstagsfeier, keine bankentaugliche Sicherheitslösung. Den Link zur
@@ -128,8 +122,9 @@ Nach dem Einfügen jeweils auf **Veröffentlichen** klicken.
 
 Da du für Gästebuch & Fotos ohnehin schon ein Firebase-Projekt hast (Schritt 1),
 liegt es nahe, die Seite selbst auch dort zu hosten — dann läuft alles
-(Datenbank, Speicher, Webseite) unter einem Dach, mit einer kostenlosen
-`https://...web.app`-Adresse und automatischem HTTPS.
+(Datenbank und Webseite) unter einem Dach, mit einer kostenlosen
+`https://...web.app`-Adresse und automatischem HTTPS. Auch Hosting bleibt im
+kostenlosen Spark-Tarif, solange die Seite nicht extrem viel Traffic hat.
 
 ### Einmalige Einrichtung
 
