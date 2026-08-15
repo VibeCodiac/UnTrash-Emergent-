@@ -108,27 +108,19 @@ Nach dem Einfügen jeweils auf **Veröffentlichen** klicken.
 
 ---
 
-## 2. Passwort & Foto anpassen
+## 2. Passwort & Inhalte anpassen
 
 - **Passwort:** in `firebase-config.js`, Variable `RUEDIGER_SITE_PASSWORD`
   (aktuell `150865`).
-- **Begrüßungsfoto:** ersetze `assets/ruediger-placeholder.svg` durch ein
-  echtes Foto von Rüdiger. Am einfachsten: eigenes Foto z. B. als
-  `assets/ruediger.jpg` ablegen und in `index.html` die Zeile
-
-  ```html
-  <img src="assets/ruediger-placeholder.svg" ... id="popup-photo" />
-  ```
-
-  auf
-
-  ```html
-  <img src="assets/ruediger.jpg" ... id="popup-photo" />
-  ```
-
-  ändern.
+- **Begrüßungstext:** Das Popup nach dem Passwort begrüßt den Gast und
+  beschreibt kurz, was auf der Seite möglich ist (Gästebuch, Fotos, Menü).
+  Der Text steht in `index.html` im Abschnitt `#welcome-popup` und lässt sich
+  dort direkt anpassen.
 - **Termin/Ort:** stehen im Hero-Bereich der `index.html` (Abschnitt
   `event-card`) — dort direkt anpassbar.
+- **Illustrationen:** Pfau, Blüte und Farnranken liegen als SVGs in
+  `assets/` und lassen sich per Text-Editor in Farbe/Form anpassen (siehe
+  `stroke="#c9a24b"` bzw. `fill="#c9a24b"` in den Dateien).
 
 ---
 
@@ -164,9 +156,12 @@ python3 -m http.server 8000
 ```
 rudiger-geburtstag/
 ├── index.html            Seitenstruktur (Passwortschranke, Popup, Sektionen)
-├── style.css             Art-Deco-Design
+├── style.css             Art-Deco-Design (Schwarz/Gold, botanische Motive)
 ├── app.js                Passwortlogik, Firebase-Anbindung (Gästebuch/Fotos)
 ├── firebase-config.js    Firebase-Zugangsdaten + Seitenpasswort (hier eintragen!)
 └── assets/
-    └── ruediger-placeholder.svg   Platzhalterbild fürs Popup (durch echtes Foto ersetzen)
+    ├── peacock.svg         Pfau-Motiv im Hero-Hintergrund
+    ├── blossom.svg         Blüten-Symbol (Trenner, Popup-Ornament)
+    ├── corner-sprig.svg    Farnranke für die Rahmenecken
+    └── fern-spray.svg      Farnzweig im Footer
 ```
