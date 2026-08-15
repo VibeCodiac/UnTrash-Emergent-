@@ -124,19 +124,80 @@ Nach dem Einfügen jeweils auf **Veröffentlichen** klicken.
 
 ---
 
-## 3. Mit GitHub Pages veröffentlichen
+## 3. Mit Firebase Hosting veröffentlichen
 
-1. Diesen Ordner (`rudiger-geburtstag/`) in ein GitHub-Repository pushen
-   (z. B. `Ruedigers Birthday`).
-2. Im Repo: **Settings → Pages**.
-3. Unter **Source**: Branch auswählen (z. B. `main`) und als Ordner
-   `/rudiger-geburtstag` bzw. bei eigenem Repo-Root `/ (root)` wählen.
-4. Speichern — nach kurzer Zeit ist die Seite unter
-   `https://<dein-benutzername>.github.io/<repo-name>/` erreichbar.
-5. Diesen Link an die Gäste verschicken (z. B. per WhatsApp/Einladung).
+Da du für Gästebuch & Fotos ohnehin schon ein Firebase-Projekt hast (Schritt 1),
+liegt es nahe, die Seite selbst auch dort zu hosten — dann läuft alles
+(Datenbank, Speicher, Webseite) unter einem Dach, mit einer kostenlosen
+`https://...web.app`-Adresse und automatischem HTTPS.
 
-Da alles rein statisch ist, funktioniert das ohne eigenen Server — Firebase
-übernimmt die Speicherung im Hintergrund.
+### Einmalige Einrichtung
+
+1. **Node.js installieren**, falls noch nicht vorhanden:
+   [nodejs.org](https://nodejs.org/) (LTS-Version). Node bringt `npm` mit,
+   das du für den nächsten Schritt brauchst.
+2. **Firebase-Kommandozeilentool installieren** (im Terminal):
+   ```bash
+   npm install -g firebase-tools
+   ```
+3. **Anmelden** — öffnet einen Browser zum Google-Login mit demselben Konto,
+   das du für das Firebase-Projekt genutzt hast:
+   ```bash
+   firebase login
+   ```
+4. **Projekt initialisieren** — im Terminal in den Seitenordner wechseln und
+   Hosting einrichten:
+   ```bash
+   cd rudiger-geburtstag
+   firebase init hosting
+   ```
+   Beantworte die Fragen so:
+   - *"Please select an option"* → **Use an existing project** → dein
+     Projekt (z. B. `ruedigers-birthday`) auswählen.
+   - *"What do you want to use as your public directory?"* → **`.`**
+     (einfach Enter drücken, Punkt = aktueller Ordner, da `index.html`
+     schon hier liegt).
+   - *"Configure as a single-page app?"* → **N** (Nein).
+   - *"Set up automatic builds and deploys with GitHub?"* → **N** (Nein,
+     reicht für den Anfang).
+   - Falls gefragt wird, ob `index.html` überschrieben werden soll → **N**
+     (deine vorhandene Datei behalten!).
+
+   Dabei entstehen zwei neue Dateien (`firebase.json`, `.firebaserc`) im
+   Ordner — die gehören mit ins Repository, damit du später einfach wieder
+   `firebase deploy` aufrufen kannst.
+
+### Veröffentlichen
+
+```bash
+firebase deploy --only hosting
+```
+
+Am Ende zeigt das Terminal die fertige Adresse an, z. B.:
+
+```
+Hosting URL: https://ruedigers-birthday.web.app
+```
+
+Diesen Link kannst du direkt an die Gäste verschicken.
+
+### Updates veröffentlichen
+
+Jedes Mal, wenn du an `index.html`, `style.css`, `app.js` oder den Bildern in
+`assets/` etwas änderst, einfach im `rudiger-geburtstag`-Ordner erneut:
+
+```bash
+firebase deploy --only hosting
+```
+
+Nach ein paar Sekunden ist die Änderung live — kein erneutes Einrichten
+nötig.
+
+> 💡 Alternative: Auch **GitHub Pages** funktioniert problemlos, falls du
+> lieber dabei bleiben möchtest — dafür einfach diesen Ordner in ein
+> GitHub-Repository pushen und unter **Settings → Pages** als Quelle
+> auswählen. Firebase Hosting hat aber den Vorteil, dass alles (Datenbank,
+> Speicher, Webseite) im selben Projekt-Dashboard verwaltet wird.
 
 ---
 
